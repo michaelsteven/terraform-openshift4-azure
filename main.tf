@@ -112,6 +112,10 @@ module "ignition" {
   public_ssh_key                = chomp(local.public_ssh_key)
   cluster_id                    = local.cluster_id
   resource_group_name           = data.azurerm_resource_group.main.name
+  # NEW VALUES ACG storage_account
+  storage_account_name          = var.azure_storage_account_name
+  storage_resource_group        = var.azure_storage_rg
+  # ACG
   availability_zones            = var.azure_master_availability_zones
   node_count                    = var.worker_count
   infra_count                   = var.infra_count
@@ -154,7 +158,7 @@ module "bootstrap" {
   ilb_backend_pool_v4_id = module.vnet.internal_lb_backend_pool_v4_id
   ilb_backend_pool_v6_id = module.vnet.internal_lb_backend_pool_v6_id
   tags                   = local.tags
-  storage_account        = azurerm_storage_account.cluster
+  storage_account        = data.azurerm_storage_account.cluster
   nsg_name               = module.vnet.cluster_nsg_name
   private                = module.vnet.private
   outbound_udr           = var.azure_outbound_user_defined_routing
@@ -180,31 +184,11 @@ module "master" {
   ilb_backend_pool_v6_id = module.vnet.internal_lb_backend_pool_v6_id
   subnet_id              = module.vnet.master_subnet_id
   instance_count         = var.master_count
-  storage_account        = azurerm_storage_account.cluster
+  storage_account        = data.azurerm_storage_account.cluster
   os_volume_type         = var.azure_master_root_volume_type
   os_volume_size         = var.azure_master_root_volume_size
   private                = module.vnet.private
   outbound_udr           = var.azure_outbound_user_defined_routing
-
-  use_ipv4                  = var.use_ipv4 || var.azure_emulate_single_stack_ipv6
-  use_ipv6                  = var.use_ipv6
-  emulate_single_stack_ipv6 = var.azure_emulate_single_stack_ipv6
-}
-
-module "dns" {
-  count                           = var.openshift_byo_dns ? 0 : 1
-  source                          = "./dns"
-  cluster_domain                  = "${var.cluster_name}.${var.base_domain}"
-  cluster_id                      = local.cluster_id
-  base_domain                     = var.base_domain
-  virtual_network_id              = module.vnet.virtual_network_id
-  external_lb_fqdn_v4             = module.vnet.public_lb_pip_v4_fqdn
-  external_lb_fqdn_v6             = module.vnet.public_lb_pip_v6_fqdn
-  internal_lb_ipaddress_v4        = module.vnet.internal_lb_ip_v4_address
-  internal_lb_ipaddress_v6        = module.vnet.internal_lb_ip_v6_address
-  resource_group_name             = data.azurerm_resource_group.main.name
-  base_domain_resource_group_name = var.azure_base_domain_resource_group_name
-  private                         = module.vnet.private
 
   use_ipv4                  = var.use_ipv4 || var.azure_emulate_single_stack_ipv6
   use_ipv6                  = var.use_ipv6
@@ -231,12 +215,10 @@ data "azurerm_resource_group" "network" {
   name = var.azure_network_resource_group_name
 }
 
-resource "azurerm_storage_account" "cluster" {
-  name                     = "cluster${var.cluster_name}${random_string.cluster_id.result}"
-  resource_group_name      = data.azurerm_resource_group.main.name
-  location                 = var.azure_region
-  account_tier             = "Standard"
-  account_replication_type = "LRS"
+data "azurerm_storage_account" "cluster" {
+  name                     = var.azure_storage_account_name
+  resource_group_name      = var.azure_storage_rg
+
 }
 
 resource "azurerm_user_assigned_identity" "main" {
@@ -261,18 +243,18 @@ resource "azurerm_role_assignment" "network" {
 }
 
 # copy over the vhd to cluster resource group and create an image using that
-resource "azurerm_storage_container" "vhd" {
-  name                 = "vhd"
-  storage_account_name = azurerm_storage_account.cluster.name
-}
+ resource "azurerm_storage_container" "vhd" {
+  name                 = "vhd${local.cluster_id}"
+  storage_account_name = data.azurerm_storage_account.cluster.name
+ }
 
 resource "azurerm_storage_blob" "rhcos_image" {
   name                   = "rhcos${random_string.cluster_id.result}.vhd"
-  storage_account_name   = azurerm_storage_account.cluster.name
+  storage_account_name   = data.azurerm_storage_account.cluster.name
   storage_container_name = azurerm_storage_container.vhd.name
   type                   = "Page"
   source_uri             = local.rhcos_image
-  metadata               = tomap({ "source_uri" = local.rhcos_image })
+  metadata               = tomap({"source_uri" = local.rhcos_image})
 }
 
 resource "azurerm_image" "cluster" {
@@ -302,6 +284,6 @@ if [[ "${var.azure_private}" == "false" ]]; then
   az network public-ip delete -g ${data.azurerm_resource_group.main.name} -n ${local.cluster_id}-bootstrap-pip-v4
 fi
 az network nic delete -g ${data.azurerm_resource_group.main.name} -n ${local.cluster_id}-bootstrap-nic
-EOF    
+EOF     
   }
 }

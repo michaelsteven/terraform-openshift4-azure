@@ -1,13 +1,13 @@
-resource "azurerm_storage_account" "ignition" {
-  name                     = "ignition${local.cluster_nr}"
-  resource_group_name      = var.resource_group_name
-  location                 = var.azure_region
-  account_tier             = "Standard"
-  account_replication_type = "LRS"
+data "azurerm_storage_account" "ignition" {
+  name                     = var.storage_account_name
+  resource_group_name      = var.storage_resource_group
+#  location                 = var.azure_region
+#  account_tier             = "Standard"
+#  account_replication_type = "LRS"
 }
 
 data "azurerm_storage_account_sas" "ignition" {
-  connection_string = azurerm_storage_account.ignition.primary_connection_string
+  connection_string = data.azurerm_storage_account.ignition.primary_connection_string
   https_only        = true
 
   resource_types {
@@ -40,8 +40,8 @@ data "azurerm_storage_account_sas" "ignition" {
 }
 
 resource "azurerm_storage_container" "ignition" {
-  name                  = "ignition"
-  storage_account_name  = azurerm_storage_account.ignition.name
+  name                  = "ignition${local.cluster_nr}"
+  storage_account_name  = data.azurerm_storage_account.ignition.name
   container_access_type = "private"
 }
 
@@ -121,7 +121,7 @@ resource "null_resource" "generate_ignition" {
 resource "azurerm_storage_blob" "ignition-bootstrap" {
   name                   = "bootstrap.ign"
   source                 = "${local.installer_workspace}/bootstrap.ign"
-  storage_account_name   = azurerm_storage_account.ignition.name
+  storage_account_name   = data.azurerm_storage_account.ignition.name
   storage_container_name = azurerm_storage_container.ignition.name
   type                   = "Block"
   depends_on = [
@@ -132,7 +132,7 @@ resource "azurerm_storage_blob" "ignition-bootstrap" {
 resource "azurerm_storage_blob" "ignition-master" {
   name                   = "master.ign"
   source                 = "${local.installer_workspace}/master.ign"
-  storage_account_name   = azurerm_storage_account.ignition.name
+  storage_account_name   = data.azurerm_storage_account.ignition.name
   storage_container_name = azurerm_storage_container.ignition.name
   type                   = "Block"
   depends_on = [
@@ -143,7 +143,7 @@ resource "azurerm_storage_blob" "ignition-master" {
 resource "azurerm_storage_blob" "ignition-worker" {
   name                   = "worker.ign"
   source                 = "${local.installer_workspace}/worker.ign"
-  storage_account_name   = azurerm_storage_account.ignition.name
+  storage_account_name   = data.azurerm_storage_account.ignition.name
   storage_container_name = azurerm_storage_container.ignition.name
   type                   = "Block"
   depends_on = [
