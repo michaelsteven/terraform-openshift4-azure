@@ -92,7 +92,9 @@ api_and_api-int_dns_ip            = "XXXX"                # The IP value assigne
 | proxy_config                          | Configuration for Cluster wide proxy | [AirGapped](AIRGAPPED.md)| map |
 | openshift_ssh_key | Path to your own SSH Public Key.  If none provided it will create one for you | - | string |
 | openshift_additional_trust_bundle | Path to your trusted CA bundle in pem format | - | string |
-| openshift_byo_dns | If set to true, we will not create Azure Public/Private DNS zones.  **You'll need to manually create `api`, `api-int` and `*.apps` DNS records** | false | bool |
+| vhd_exists                            | Is VHD coreos file  already stored in existing storage accountfile | false | bool
+| azure_storage_container_name          | If `vhd_exists=true` then define the container where coreos image is stored | `null` | string
+| azure_storage_blob_name               | If `vhd_exists=true` then define the blob where coreos image is stored | `null` | string
 
 ## Deploy with Terraform
 

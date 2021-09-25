@@ -321,3 +321,25 @@ variable "api_and_api-int_dns_ip" {
   type        = string
   default     = ""
 }
+
+variable "azure_storage_container_name" {
+  description = "The dns ip assigned to openshift api and api-int"
+  type        = string
+  default     = ""
+}
+
+variable "azure_storage_blob_name" {
+  description = "The dns ip assigned to openshift api and api-int"
+  type        = string
+  default     = ""
+}
+
+variable "vhd_exists" {
+  description = "The dns ip assigned to openshift api and api-int"
+  type        = bool
+  default     = false
+}
+
+
+
+

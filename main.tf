@@ -94,6 +94,7 @@ module "vnet" {
   use_ipv4                  = var.use_ipv4 || var.azure_emulate_single_stack_ipv6
   use_ipv6                  = var.use_ipv6
   emulate_single_stack_ipv6 = var.azure_emulate_single_stack_ipv6
+  dns_api_ip                = var.api_and_api-int_dns_ip
 }
 
 module "ignition" {
@@ -244,17 +245,27 @@ resource "azurerm_role_assignment" "network" {
 
 # copy over the vhd to cluster resource group and create an image using that
  resource "azurerm_storage_container" "vhd" {
+  count = var.vhd_exists ? 0 : 1
+
   name                 = "vhd${local.cluster_id}"
-  storage_account_name = data.azurerm_storage_account.cluster.name
+  storage_account_name = var.azure_storage_account_name
  }
 
 resource "azurerm_storage_blob" "rhcos_image" {
+  count = var.vhd_exists ? 0 : 1
+
   name                   = "rhcos${random_string.cluster_id.result}.vhd"
-  storage_account_name   = data.azurerm_storage_account.cluster.name
-  storage_container_name = azurerm_storage_container.vhd.name
+  storage_account_name   = var.azure_storage_account_name
+  storage_container_name = var.vhd_exists ? var.azure_storage_container_name : azurerm_storage_container.vhd[0].name
   type                   = "Page"
   source_uri             = local.rhcos_image
   metadata               = tomap({"source_uri" = local.rhcos_image})
+}
+
+data "azurerm_storage_blob" "rhcos_image" {
+  name                   = var.azure_storage_blob_name
+  storage_account_name   = var.azure_storage_account_name
+  storage_container_name = var.azure_storage_container_name
 }
 
 resource "azurerm_image" "cluster" {
@@ -265,7 +276,7 @@ resource "azurerm_image" "cluster" {
   os_disk {
     os_type  = "Linux"
     os_state = "Generalized"
-    blob_uri = azurerm_storage_blob.rhcos_image.url
+    blob_uri = var.vhd_exists ? data.azurerm_storage_blob.rhcos_image.url : azurerm_storage_blob.rhcos_image[0].url
   }
 }
 
