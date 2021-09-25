@@ -315,3 +315,9 @@ variable "rh_coreos_vhd_url" {
   type        = string
   default     = ""
 }
+
+variable "api_and_api-int_dns_ip" {
+  description = "The dns ip assigned to openshift api and api-int"
+  type        = string
+  default     = ""
+}
