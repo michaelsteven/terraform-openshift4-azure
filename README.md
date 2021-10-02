@@ -38,8 +38,6 @@ azure_client_secret    = "AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA"
 azure_storage_rg                  = "XXXX"
 azure_storage_account_name        = "XXXX"
 
-# DNS IPs
-api_and_api-int_dns_ip            = "XXXX"                # The IP value assigned to the api and api-int record sets in DNS 
 
 ```
 
