@@ -95,6 +95,9 @@ api_and_api-int_dns_ip            = "XXXX"                # The IP value assigne
 | vhd_exists                            | Is VHD coreos file  already stored in existing storage accountfile | false | bool
 | azure_storage_container_name          | If `vhd_exists=true` then define the container where coreos image is stored | `null` | string
 | azure_storage_blob_name               | If `vhd_exists=true` then define the blob where coreos image is stored | `null` | string
+| phased_approach                       | If `phased_approach=true` then no machines are deployed. This allows user to get the generated load balancer IP to populate DNS entries before proceeding. This is not needed if using defining IP value for `api_and_api-int_dns_ip`. Note that if set to true then `phase1_complete` should be used as well.   | `false` | string
+| phase1_complete        | Used with `phased_approach`. Set to true once DNS records are created | false | bool
+
 
 ## Deploy with Terraform
 
