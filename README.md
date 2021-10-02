@@ -4,8 +4,8 @@ This [terraform](terraform.io) implementation will deploy OpenShift 4.x into an 
 
 ** Note that this version will implement the following custom scenario:
 1. leverage an existing Azure Storage Account for coreos vhd, boot logs, and installer ignition files
-2. leverage existing DNS with predefined record sets for api, api-int, and *.app
-- Before starting you need to record the value of the IP assigned to api and api-int. These are the same and reference the front end ip of the loadbalancer
+2. If needed, leverage existing DNS with predefined record sets for api, api-int, and *.app
+- Record the value of the IP assigned to api and api-int. These are the same and reference the front end ip of the loadbalancer. Then define 
 - Before starting you need to record the value of the IP that will be assigned to *.apps
 
 ![Topology](./media/topology.svg)
@@ -95,6 +95,7 @@ azure_storage_account_name        = "XXXX"
 | azure_storage_blob_name               | If `vhd_exists=true` then define the blob where coreos image is stored | `null` | string
 | phased_approach                       | If `phased_approach=true` then no machines are deployed. This allows user to get the generated load balancer IP to populate DNS entries before proceeding. This is not needed if using defining IP value for `api_and_api-int_dns_ip`. Note that if set to true then `phase1_complete` should be used as well.   | `false` | string
 | phase1_complete        | Used with `phased_approach`. Set to true once DNS records are created | false | bool
+| api_and_api-int_dns_ip  | Used to define the front end Ip of the Load Balncer created during install | `null` | string 
 
 
 ## Deploy with Terraform
