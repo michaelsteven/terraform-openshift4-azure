@@ -117,6 +117,8 @@ resource "azurerm_network_interface_backend_address_pool_association" "internal_
 }
 
 resource "azurerm_linux_virtual_machine" "bootstrap" {
+  count = !var.phased_approach || (var.phased_approach && var.phase1_complete) ? 1 : 0
+  
   name                  = "${var.cluster_id}-bootstrap"
   location              = var.region
   resource_group_name   = var.resource_group_name

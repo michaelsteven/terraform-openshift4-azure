@@ -82,7 +82,7 @@ resource "azurerm_network_interface_backend_address_pool_association" "master_in
 }
 
 resource "azurerm_linux_virtual_machine" "master" {
-  count = var.instance_count
+  count = !var.phased_approach || (var.phased_approach && var.phase1_complete) ? var.instance_count : 0 
 
   name                  = "${var.cluster_id}-master-${count.index}"
   location              = var.region

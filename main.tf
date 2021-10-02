@@ -167,6 +167,10 @@ module "bootstrap" {
   use_ipv4                  = var.use_ipv4 || var.azure_emulate_single_stack_ipv6
   use_ipv6                  = var.use_ipv6
   emulate_single_stack_ipv6 = var.azure_emulate_single_stack_ipv6
+
+  phased_approach           = var.phased_approach 
+  phase1_complete           = var.phase1_complete
+
 }
 
 module "master" {
@@ -194,6 +198,10 @@ module "master" {
   use_ipv4                  = var.use_ipv4 || var.azure_emulate_single_stack_ipv6
   use_ipv6                  = var.use_ipv6
   emulate_single_stack_ipv6 = var.azure_emulate_single_stack_ipv6
+
+  phased_approach           = var.phased_approach 
+  phase1_complete           = var.phase1_complete
+
 }
 
 resource "azurerm_resource_group" "main" {
@@ -281,11 +289,13 @@ resource "azurerm_image" "cluster" {
 }
 
 resource "null_resource" "delete_bootstrap" {
+  count = !var.phased_approach || (var.phased_approach && var.phase1_complete) ? 1 : 0
+
   depends_on = [
     module.master
   ]
 
-  provisioner "local-exec" {
+  provisioner "local-exec" {    
     command = <<EOF
 ./installer-files/openshift-install --dir=./installer-files wait-for bootstrap-complete --log-level=debug
 az vm delete -g ${data.azurerm_resource_group.main.name} -n ${local.cluster_id}-bootstrap -y

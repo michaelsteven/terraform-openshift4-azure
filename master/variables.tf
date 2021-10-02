@@ -123,3 +123,16 @@ This is required because terraform cannot calculate counts during plan phase com
 conditional need to be recreated. See https://github.com/hashicorp/terraform/issues/12570
 EOF
 }
+
+variable "phased_approach" {
+  description = "Define whether you want to install using a phased approach"
+  type        = bool
+  default     = false  
+}
+
+variable "phase1_complete" {
+  description = "In order to get the IPs for the dns we want to complete phase1 first"
+  type        = bool
+  default     = false  
+}
+
