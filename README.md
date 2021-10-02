@@ -5,8 +5,7 @@ This [terraform](terraform.io) implementation will deploy OpenShift 4.x into an 
 ** Note that this version will implement the following custom scenario:
 1. leverage an existing Azure Storage Account for coreos vhd, boot logs, and installer ignition files
 2. If needed, leverage existing DNS with predefined record sets for api, api-int, and *.app
-- Record the value of the IP assigned to api and api-int. These are the same and reference the front end ip of the loadbalancer. Then define 
-- Before starting you need to record the value of the IP that will be assigned to *.apps
+- Record the value of the IP assigned to api and api-int. These are the same and reference the front end ip of the loadbalancer. Then define `api_and_api-int_dns_ip`
 
 ![Topology](./media/topology.svg)
 
@@ -168,8 +167,8 @@ fs2021-hv0eu-worker-eastus23-tsw44   Running   Standard_D8s_v3   eastus2   3    
 
 The infra nodes host the router/ingress pods, all the monitoring infrastrucutre, and the image registry.
 
-## Set the IP that is defined in existing DNS for cluster apps 
-Replace XXX below with the DNS IP assigned for *.apps record set. Without this you will not be able to access the console and authentication routes
+## Optional: Set the IP that is defined in existing DNS for cluster apps 
+Replace XXX below with the DNS IP assigned for *.apps record set. 
 
 ```bash
 oc patch svc router-default --patch '{"spec":{"loadBalancerIP":"XXX"}}' --type=merge -n openshift-ingress
