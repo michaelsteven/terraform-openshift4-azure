@@ -86,3 +86,8 @@ This determined whether User defined routing will be used for egress to Internet
 When false, Standard LB will be used for egress to the Internet.
 EOF
 }
+
+variable "dns_api_ip" {
+  type = string
+  default = ""
+}

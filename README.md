@@ -1,6 +1,11 @@
 # OpenShift 4 UPI on Azure Cloud
 
-This [terraform](terraform.io) implementation will deploy OpenShift 4.x into an Azure VNET, with two subnets for controlplane and worker nodes.  Traffic to the master nodes is handled via a pair of loadbalancers, one for internal traffic and another for external API traffic.  Application loadbalancing is handled by a third loadbalancer that talks to the router pods on the infra nodes.  Worker, Infra and Master nodes are deployed across 3 Availability Zones. Note that this version will leverage an existing Azure Storage Account.
+This [terraform](terraform.io) implementation will deploy OpenShift 4.x into an Azure VNET, with two subnets for controlplane and worker nodes.  Traffic to the master nodes is handled via a pair of loadbalancers, one for internal traffic and another for external API traffic.  Application loadbalancing is handled by a third loadbalancer that talks to the router pods on the infra nodes.  Worker, Infra and Master nodes are deployed across 3 Availability Zones. 
+
+** Note that this version will implement the following custom scenario:
+1. leverage an existing Azure Storage Account for coreos vhd, boot logs, and installer ignition files
+2. If needed, leverage existing DNS with predefined record sets for api, api-int, and *.app
+- Record the value of the IP assigned to api and api-int. These are the same and reference the front end ip of the loadbalancer. Then define `api_and_api-int_dns_ip`
 
 ![Topology](./media/topology.svg)
 
@@ -31,6 +36,8 @@ azure_client_secret    = "AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA"
 # Storage Account
 azure_storage_rg                  = "XXXX"
 azure_storage_account_name        = "XXXX"
+
+
 ```
 
 ## Customizable Variables
@@ -82,7 +89,13 @@ azure_storage_account_name        = "XXXX"
 | proxy_config                          | Configuration for Cluster wide proxy | [AirGapped](AIRGAPPED.md)| map |
 | openshift_ssh_key | Path to your own SSH Public Key.  If none provided it will create one for you | - | string |
 | openshift_additional_trust_bundle | Path to your trusted CA bundle in pem format | - | string |
-| openshift_byo_dns | If set to true, we will not create Azure Public/Private DNS zones.  **You'll need to manually create `api`, `api-int` and `*.apps` DNS records** | false | bool |
+| vhd_exists                            | Is VHD coreos file  already stored in existing storage accountfile | `false` | bool
+| azure_storage_container_name          | If `vhd_exists=true` then define the container where coreos image is stored | `null` | string
+| azure_storage_blob_name               | If `vhd_exists=true` then define the blob where coreos image is stored | `null` | string
+| phased_approach                       | If `phased_approach=true` then no machines are deployed. This allows user to get the generated load balancer IP to populate DNS entries before proceeding. This is not needed if using defining IP value for `api_and_api-int_dns_ip`. Note that if set to true then `phase1_complete` should be used as well.   | `false` | bool
+| phase1_complete        | Used with `phased_approach`. Set to true once DNS records are created | `false` | bool
+| api_and_api-int_dns_ip  | Used to define the front end Ip of the Load Balancer created during install | `null` | string 
+
 
 ## Deploy with Terraform
 
@@ -112,6 +125,8 @@ azure_storage_account_name        = "XXXX"
 
     ```bash
     $ export KUBECONFIG=$PWD/installer-files/auth/kubeconfig
+    ```
+    ```
     $ oc get nodes
     NAME                                 STATUS   ROLES          AGE   VERSION
     fs2021-hv0eu-infra-eastus21-6kqlt    Ready    infra,worker   20m   v1.19.0+3b01205
@@ -153,3 +168,10 @@ fs2021-hv0eu-worker-eastus23-tsw44   Running   Standard_D8s_v3   eastus2   3    
 ```
 
 The infra nodes host the router/ingress pods, all the monitoring infrastrucutre, and the image registry.
+
+## Optional: Set the IP that is defined in existing DNS for cluster apps 
+Replace XXX below with the DNS IP assigned for *.apps record set. 
+
+```bash
+oc patch svc router-default --patch '{"spec":{"loadBalancerIP":"XXX"}}' --type=merge -n openshift-ingress
+```

@@ -59,6 +59,7 @@ variable "azure_master_root_volume_size" {
 variable "azure_base_domain_resource_group_name" {
   type        = string
   description = "The resource group that contains the dns zone used as base domain for the cluster."
+  default     = ""
 }
 
 variable "azure_subscription_id" {
@@ -315,3 +316,48 @@ variable "rh_coreos_vhd_url" {
   type        = string
   default     = ""
 }
+
+variable "api_and_api-int_dns_ip" {
+  description = "The dns ip assigned to openshift api and api-int"
+  type        = string
+  default     = ""
+}
+
+variable "apps_dns_ip" {
+  description = "The dns ip assigned to openshift api and api-int"
+  type        = string
+  default     = ""
+}
+
+variable "azure_storage_container_name" {
+  description = "Azure Container name storing vhd file"
+  type        = string
+  default     = ""
+}
+
+variable "azure_storage_blob_name" {
+  description = "azure blob which is the coreos vhd file"
+  type        = string
+  default     = ""
+}
+
+variable "vhd_exists" {
+  description = "The dns ip assigned to openshift api and api-int"
+  type        = bool
+  default     = false
+}
+
+variable "phased_approach" {
+  description = "Define whether you want to install using a phased approach"
+  type        = bool
+  default     = false  
+}
+
+variable "phase1_complete" {
+  description = "In order to get the IPs for the dns we want to complete phase1 first"
+  type        = bool
+  default     = false  
+}
+
+
+

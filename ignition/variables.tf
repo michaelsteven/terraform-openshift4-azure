@@ -180,3 +180,8 @@ variable "storage_resource_group" {
   type    = string
   default = ""
 }
+
+variable "apps_ip" {
+  type    = string
+  default = ""
+}
