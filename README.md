@@ -89,12 +89,12 @@ azure_storage_account_name        = "XXXX"
 | proxy_config                          | Configuration for Cluster wide proxy | [AirGapped](AIRGAPPED.md)| map |
 | openshift_ssh_key | Path to your own SSH Public Key.  If none provided it will create one for you | - | string |
 | openshift_additional_trust_bundle | Path to your trusted CA bundle in pem format | - | string |
-| vhd_exists                            | Is VHD coreos file  already stored in existing storage accountfile | false | bool
+| vhd_exists                            | Is VHD coreos file  already stored in existing storage accountfile | `false` | bool
 | azure_storage_container_name          | If `vhd_exists=true` then define the container where coreos image is stored | `null` | string
 | azure_storage_blob_name               | If `vhd_exists=true` then define the blob where coreos image is stored | `null` | string
-| phased_approach                       | If `phased_approach=true` then no machines are deployed. This allows user to get the generated load balancer IP to populate DNS entries before proceeding. This is not needed if using defining IP value for `api_and_api-int_dns_ip`. Note that if set to true then `phase1_complete` should be used as well.   | `false` | string
-| phase1_complete        | Used with `phased_approach`. Set to true once DNS records are created | false | bool
-| api_and_api-int_dns_ip  | Used to define the front end Ip of the Load Balncer created during install | `null` | string 
+| phased_approach                       | If `phased_approach=true` then no machines are deployed. This allows user to get the generated load balancer IP to populate DNS entries before proceeding. This is not needed if using defining IP value for `api_and_api-int_dns_ip`. Note that if set to true then `phase1_complete` should be used as well.   | `false` | bool
+| phase1_complete        | Used with `phased_approach`. Set to true once DNS records are created | `false` | bool
+| api_and_api-int_dns_ip  | Used to define the front end Ip of the Load Balancer created during install | `null` | string 
 
 
 ## Deploy with Terraform
@@ -125,6 +125,8 @@ azure_storage_account_name        = "XXXX"
 
     ```bash
     $ export KUBECONFIG=$PWD/installer-files/auth/kubeconfig
+    ```
+    ```
     $ oc get nodes
     NAME                                 STATUS   ROLES          AGE   VERSION
     fs2021-hv0eu-infra-eastus21-6kqlt    Ready    infra,worker   20m   v1.19.0+3b01205
