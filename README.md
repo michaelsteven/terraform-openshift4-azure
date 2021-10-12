@@ -94,7 +94,12 @@ azure_storage_account_name        = "XXXX"
 | azure_storage_blob_name               | If `vhd_exists=true` then define the blob where coreos image is stored | `null` | string
 | phased_approach                       | If `phased_approach=true` then no machines are deployed. This allows user to get the generated load balancer IP to populate DNS entries before proceeding. This is not needed if using defining IP value for `api_and_api-int_dns_ip`. Note that if set to true then `phase1_complete` should be used as well.   | `false` | bool
 | phase1_complete        | Used with `phased_approach`. Set to true once DNS records are created | `false` | bool
-| api_and_api-int_dns_ip  | Used to define the front end Ip of the Load Balancer created during install | `null` | string 
+| api_and_api-int_dns_ip  | Used to define the front end IP of the Load Balancer created during install | `null` | string 
+| apps_dns_ip | Used to set the front end IP of the internal load-balancer for *.apps record set. | `null` | string
+| azure_role_id_cluster | If needed, provide the ID of the Azure Custom Role scoped for the main Cluster Resource Group | `null` | string
+| azure_role_id_network | If needed, provide the ID of the Azure Custom Role scoped for the network Resource Group | `null` | string
+| use_default_imageregistry | Define if you want to use the default imageregistry that is created with the install | `true` | bool
+
 
 
 ## Deploy with Terraform

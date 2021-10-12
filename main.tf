@@ -237,9 +237,13 @@ resource "azurerm_user_assigned_identity" "main" {
   name = "${local.cluster_id}-identity"
 }
 
+data "azurerm_role_definition" "contributor" {
+  name = "Contributor"
+}
+
 resource "azurerm_role_assignment" "main" {
   scope                = data.azurerm_resource_group.main.id
-  role_definition_name = "Contributor"
+  role_definition_id = (var.azure_role_id_cluster == "") ? data.azurerm_role_definition.contributor.id : var.azure_role_id_cluster
   principal_id         = azurerm_user_assigned_identity.main.principal_id
 }
 
@@ -247,7 +251,7 @@ resource "azurerm_role_assignment" "network" {
   count = var.azure_preexisting_network ? 1 : 0
 
   scope                = data.azurerm_resource_group.network[0].id
-  role_definition_name = "Contributor"
+  role_definition_id = (var.azure_role_id_network == "") ? data.azurerm_role_definition.contributor.id : var.azure_role_id_network
   principal_id         = azurerm_user_assigned_identity.main.principal_id
 }
 
@@ -305,6 +309,13 @@ if [[ "${var.azure_private}" == "false" ]]; then
   az network public-ip delete -g ${data.azurerm_resource_group.main.name} -n ${local.cluster_id}-bootstrap-pip-v4
 fi
 az network nic delete -g ${data.azurerm_resource_group.main.name} -n ${local.cluster_id}-bootstrap-nic
+export KUBECONFIG=./installer-files/auth/kubeconfig
+if  [ "${var.apps_dns_ip}" != "" ]; then
+  oc patch svc router-default --patch '{"spec":{"loadBalancerIP":"${var.apps_dns_ip}"}}' --type=merge -n openshift-ingress
+fi
+if ${!var.use_default_imageregistry}; then
+  oc patch configs.imageregistry.operator.openshift.io cluster --patch '{"spec":{"managementState":"Removed"}}' --type=merge
+fi
 EOF     
   }
 }
