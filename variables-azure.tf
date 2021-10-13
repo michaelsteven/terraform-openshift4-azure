@@ -359,5 +359,21 @@ variable "phase1_complete" {
   default     = false  
 }
 
+variable "azure_role_id_cluster" {
+  description = "Role assigned to identity for the cluster (main) Resource Group"
+  type        = string
+  default     = ""
+}
 
+variable "azure_role_id_network" {
+  description = "Role assigned to identity for the network Resource Group"
+  type        = string
+  default     = ""
+}
+
+variable "use_default_imageregistry" {
+  description = "Define if default imageregistry is required"
+  type        = bool
+  default     = true
+}
 
