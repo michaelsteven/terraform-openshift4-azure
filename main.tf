@@ -72,6 +72,7 @@ locals {
   public_ssh_key                    = var.openshift_ssh_key == "" ? tls_private_key.installkey[0].public_key_openssh : file(var.openshift_ssh_key)
   major_version                     = join(".", slice(split(".", var.openshift_version), 0, 2))
   rhcos_image                       = lookup(lookup(jsondecode(data.http.images.body), "azure"), "url")
+  vhd_exists                        = var.vhd_exists && var.storage_account_exists
 }
 
 module "vnet" {
@@ -113,10 +114,8 @@ module "ignition" {
   public_ssh_key                = chomp(local.public_ssh_key)
   cluster_id                    = local.cluster_id
   resource_group_name           = data.azurerm_resource_group.main.name
-  # NEW VALUES ACG storage_account
-  storage_account_name          = var.azure_storage_account_name
-  storage_resource_group        = var.azure_storage_rg
-  # ACG
+  storage_account_name          = var.storage_account_exists ? data.azurerm_storage_account.cluster[0].name : azurerm_storage_account.cluster[0].name
+  storage_resource_group        = var.storage_account_exists ? data.azurerm_storage_account.cluster[0].resource_group_name : azurerm_storage_account.cluster[0].resource_group_name
   availability_zones            = var.azure_master_availability_zones
   node_count                    = var.worker_count
   infra_count                   = var.infra_count
@@ -159,7 +158,7 @@ module "bootstrap" {
   ilb_backend_pool_v4_id = module.vnet.internal_lb_backend_pool_v4_id
   ilb_backend_pool_v6_id = module.vnet.internal_lb_backend_pool_v6_id
   tags                   = local.tags
-  storage_account        = data.azurerm_storage_account.cluster
+  storage_account        = var.storage_account_exists ? data.azurerm_storage_account.cluster[0] : azurerm_storage_account.cluster[0] 
   nsg_name               = module.vnet.cluster_nsg_name
   private                = module.vnet.private
   outbound_udr           = var.azure_outbound_user_defined_routing
@@ -189,7 +188,7 @@ module "master" {
   ilb_backend_pool_v6_id = module.vnet.internal_lb_backend_pool_v6_id
   subnet_id              = module.vnet.master_subnet_id
   instance_count         = var.master_count
-  storage_account        = data.azurerm_storage_account.cluster
+  storage_account        = var.storage_account_exists ? data.azurerm_storage_account.cluster[0] : azurerm_storage_account.cluster[0]
   os_volume_type         = var.azure_master_root_volume_type
   os_volume_size         = var.azure_master_root_volume_size
   private                = module.vnet.private
@@ -225,11 +224,23 @@ data "azurerm_resource_group" "network" {
 }
 
 data "azurerm_storage_account" "cluster" {
+  count = var.storage_account_exists ? 1 : 0
+
   name                     = var.azure_storage_account_name
   resource_group_name      = var.azure_storage_rg
 
 }
 
+resource "azurerm_storage_account" "cluster" {
+  count = var.storage_account_exists ? 0 : 1
+
+  name                     = "cluster${var.cluster_name}${random_string.cluster_id.result}"
+  resource_group_name      = data.azurerm_resource_group.main.name
+  location                 = var.azure_region
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+}
+ 
 resource "azurerm_user_assigned_identity" "main" {
   resource_group_name = data.azurerm_resource_group.main.name
   location            = data.azurerm_resource_group.main.location
@@ -257,24 +268,25 @@ resource "azurerm_role_assignment" "network" {
 
 # copy over the vhd to cluster resource group and create an image using that
  resource "azurerm_storage_container" "vhd" {
-  count = var.vhd_exists ? 0 : 1
+  count = local.vhd_exists ? 0 : 1
 
   name                 = "vhd${local.cluster_id}"
-  storage_account_name = var.azure_storage_account_name
+  storage_account_name = var.storage_account_exists ? var.azure_storage_account_name : azurerm_storage_account.cluster[0].name
  }
 
 resource "azurerm_storage_blob" "rhcos_image" {
-  count = var.vhd_exists ? 0 : 1
+  count = local.vhd_exists ? 0 : 1
 
   name                   = "rhcos${random_string.cluster_id.result}.vhd"
-  storage_account_name   = var.azure_storage_account_name
-  storage_container_name = var.vhd_exists ? var.azure_storage_container_name : azurerm_storage_container.vhd[0].name
+  storage_account_name   = var.storage_account_exists ? var.azure_storage_account_name : azurerm_storage_account.cluster[0].name
+  storage_container_name = azurerm_storage_container.vhd[0].name
   type                   = "Page"
   source_uri             = local.rhcos_image
   metadata               = tomap({"source_uri" = local.rhcos_image})
 }
 
 data "azurerm_storage_blob" "rhcos_image" {
+  count = local.vhd_exists ? 1 : 0 
   name                   = var.azure_storage_blob_name
   storage_account_name   = var.azure_storage_account_name
   storage_container_name = var.azure_storage_container_name
@@ -288,7 +300,7 @@ resource "azurerm_image" "cluster" {
   os_disk {
     os_type  = "Linux"
     os_state = "Generalized"
-    blob_uri = var.vhd_exists ? data.azurerm_storage_blob.rhcos_image.url : azurerm_storage_blob.rhcos_image[0].url
+    blob_uri = local.vhd_exists ? data.azurerm_storage_blob.rhcos_image[0].url : azurerm_storage_blob.rhcos_image[0].url
   }
 }
 

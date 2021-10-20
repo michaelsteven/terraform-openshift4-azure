@@ -329,6 +329,12 @@ variable "apps_dns_ip" {
   default     = ""
 }
 
+variable "storage_account_exists" {
+  description = "Define if existing storage account to be used"
+  type        = bool
+  default     = false
+}
+
 variable "azure_storage_container_name" {
   description = "Azure Container name storing vhd file"
   type        = string
@@ -342,7 +348,7 @@ variable "azure_storage_blob_name" {
 }
 
 variable "vhd_exists" {
-  description = "The dns ip assigned to openshift api and api-int"
+  description = "Does the blob already exist in an existing Storage account"
   type        = bool
   default     = false
 }

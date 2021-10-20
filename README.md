@@ -89,6 +89,9 @@ azure_storage_account_name        = "XXXX"
 | proxy_config                          | Configuration for Cluster wide proxy | [AirGapped](AIRGAPPED.md)| map |
 | openshift_ssh_key | Path to your own SSH Public Key.  If none provided it will create one for you | - | string |
 | openshift_additional_trust_bundle | Path to your trusted CA bundle in pem format | - | string |
+| storage_account_exists | Optionally use existing Storage Account. If `false` then vhd_exists should be `false` | `false` | bool 
+| azure_storage_rg | Optionally define existing Resource Group where Storage Account exists. Use with azure_storage_account_name | "" | string
+| azure_storage_account_name | Optionally define existing Storage Account name. Use with azure_storage_rg | "" | string
 | vhd_exists                            | Is VHD coreos file  already stored in existing storage accountfile | `false` | bool
 | azure_storage_container_name          | If `vhd_exists=true` then define the container where coreos image is stored | `null` | string
 | azure_storage_blob_name               | If `vhd_exists=true` then define the blob where coreos image is stored | `null` | string
