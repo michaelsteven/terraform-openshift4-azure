@@ -102,6 +102,8 @@ azure_storage_account_name        = "XXXX"
 | azure_role_id_cluster | If needed, provide the ID of the Azure Custom Role scoped for the main Cluster Resource Group | `null` | string
 | azure_role_id_network | If needed, provide the ID of the Azure Custom Role scoped for the network Resource Group | `null` | string
 | use_default_imageregistry | Define if you want to use the default imageregistry that is created with the install | `true` | bool
+| openshift_managed_infrastructure | Define if the infrastructure is managed by openshift (IPI) | `true` | bool
+| azure_worker_root_volume_type | The type of the volume the root block device of worker nodes | Premium_LRS | string
 
 
 

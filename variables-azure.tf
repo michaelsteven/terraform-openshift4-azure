@@ -383,3 +383,15 @@ variable "use_default_imageregistry" {
   default     = true
 }
 
+variable "openshift_managed_infrastructure" {
+  description = "Define if the infrastructure is managed by openshift"
+  type        = bool
+  default     = true  
+}
+
+variable "azure_worker_root_volume_type" {
+  type        = string
+  description = "The type of the volume the root block device of worker nodes."
+  default     = "Premium_LRS"
+}
+

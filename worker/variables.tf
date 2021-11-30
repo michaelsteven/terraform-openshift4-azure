@@ -18,7 +18,7 @@ variable "vm_size" {
 
 variable "vm_image" {
   type        = string
-  description = "The resource id of the vm image used for masters."
+  description = "The resource id of the vm image used for workers."
 }
 
 variable "identity" {
@@ -46,7 +46,7 @@ variable "ilb_backend_pool_v6_id" {
   type = string
 }
 
-variable "ignition_master" {
+variable "ignition_worker" {
   type    = string
   default = ""
 }
@@ -58,7 +58,7 @@ variable "kubeconfig_content" {
 
 variable "subnet_id" {
   type        = string
-  description = "The subnet to attach the masters to."
+  description = "The subnet to attach the workers to."
 }
 
 variable "os_volume_type" {
@@ -88,7 +88,7 @@ variable "ignition" {
 
 variable "availability_zones" {
   type        = list(string)
-  description = "List of the availability zones in which to create the masters. The length of this list must match instance_count."
+  description = "List of the availability zones in which to create the workers. The length of this list must match instance_count."
 }
 
 variable "private" {

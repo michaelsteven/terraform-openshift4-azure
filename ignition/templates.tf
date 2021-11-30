@@ -177,8 +177,35 @@ resource "local_file" "cloud-provider-config" {
   ]
 }
 
+data "template_file" "cluster-ingress-default-ingresscontroller" {
+  template = <<EOF
+apiVersion: operator.openshift.io/v1
+kind: IngressController
+metadata:
+  finalizers:
+  - ingresscontroller.operator.openshift.io/finalizer-ingresscontroller
+  name: default
+  namespace: openshift-ingress-operator
+spec:
+  endpointPublishingStrategy: 
+    type: HostNetwork
+  replicas: 2
+status: {}
+EOF
+}
+
+resource "local_file" "cluster-ingress-default-ingresscontroller" {
+  content  = data.template_file.cluster-ingress-default-ingresscontroller.rendered
+  filename = "${local.installer_workspace}/manifests/cluster-ingress-default-ingresscontroller.yaml"
+  depends_on = [
+    null_resource.download_binaries,
+    null_resource.generate_manifests,
+  ]
+}
+
+
 data "template_file" "openshift-cluster-api_master-machines" {
-  count    = var.master_count
+  count    = var.managed_infrastructure ? var.master_count : 0
   template = <<EOF
 apiVersion: machine.openshift.io/v1beta1
 kind: Machine
@@ -208,7 +235,7 @@ spec:
       internalLoadBalancer: ""
       kind: AzureMachineProviderSpec
       location: ${var.azure_region}
-      managedIdentity: ${var.cluster_id}-identity
+      managedIdentity: %{ if var.managed_infrastructure }${var.cluster_id}-identity%{ else }""%{ endif }
       metadata:
         creationTimestamp: null
       natRule: null
@@ -233,7 +260,7 @@ EOF
 }
 
 resource "local_file" "openshift-cluster-api_master-machines" {
-  count    = var.master_count
+  count    = var.managed_infrastructure ? var.master_count : 0
   content  = element(data.template_file.openshift-cluster-api_master-machines.*.rendered, count.index)
   filename = "${local.installer_workspace}/openshift/99_openshift-cluster-api_master-machines-${count.index}.yaml"
   depends_on = [
@@ -247,7 +274,7 @@ locals {
 }
 
 data "template_file" "openshift-cluster-api_worker-machineset" {
-  count    = length(var.availability_zones)
+  count    = var.managed_infrastructure ? length(var.availability_zones) : 0
   template = <<EOF
 apiVersion: machine.openshift.io/v1beta1
 kind: MachineSet
@@ -291,7 +318,7 @@ spec:
           internalLoadBalancer: ""
           kind: AzureMachineProviderSpec
           location: ${var.azure_region}
-          managedIdentity: ${var.cluster_id}-identity
+          managedIdentity: %{ if var.managed_infrastructure }${var.cluster_id}-identity%{ else }""%{ endif }
           metadata:
             creationTimestamp: null
           natRule: null
@@ -316,7 +343,7 @@ EOF
 }
 
 resource "local_file" "openshift-cluster-api_worker-machineset" {
-  count    = length(var.availability_zones)
+  count    = var.managed_infrastructure ? length(var.availability_zones) : 0
   content  = element(data.template_file.openshift-cluster-api_worker-machineset.*.rendered, count.index)
   filename = "${local.installer_workspace}/openshift/99_openshift-cluster-api_worker-machineset-${count.index}.yaml"
   depends_on = [
@@ -372,7 +399,7 @@ spec:
           internalLoadBalancer: ""
           kind: AzureMachineProviderSpec
           location: ${var.azure_region}
-          managedIdentity: ${var.cluster_id}-identity
+          managedIdentity: %{ if var.managed_infrastructure }${var.cluster_id}-identity%{ else }""%{ endif }
           metadata:
             creationTimestamp: null
           natRule: null
@@ -747,6 +774,211 @@ resource "local_file" "airgapped_registry_upgrades" {
   count    = var.airgapped["enabled"] ? 1 : 0
   content  = element(data.template_file.airgapped_registry_upgrades.*.rendered, count.index)
   filename = "${local.installer_workspace}/openshift/99_airgapped_registry_upgrades.yaml"
+  depends_on = [
+    null_resource.download_binaries,
+    null_resource.generate_manifests,
+  ]
+}
+
+### Auto Approve
+
+data "template_file" "csr_auto_approve_namespace" {
+  count    = !var.managed_infrastructure ? 1 : 0
+  template = <<EOF
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: csr-auto-approve
+EOF
+}
+
+resource "local_file" "csr_auto_approve_namespace_yaml" {
+  count    = !var.managed_infrastructure ? 1 : 0
+  content  = data.template_file.csr_auto_approve_namespace[0].rendered
+  filename = "${local.installer_workspace}/manifests/csr-auto-approve-namespace.yaml"
+  depends_on = [
+    null_resource.download_binaries,
+    null_resource.generate_manifests,
+  ]
+}
+
+data "template_file" "csr_auto_approve_serviceaccount" {
+  count    = !var.managed_infrastructure ? 1 : 0
+  template = <<EOF
+kind: ServiceAccount
+apiVersion: v1
+metadata:
+  name: csr-auto-approve-service-account
+  namespace: csr-auto-approve
+EOF
+}
+
+resource "local_file" "csr_auto_approve_serviceaccount_yaml" {
+  count    = !var.managed_infrastructure ? 1 : 0
+  content  = data.template_file.csr_auto_approve_serviceaccount[0].rendered
+  filename = "${local.installer_workspace}/manifests/csr-auto-approve-serviceaccount.yaml"
+  depends_on = [
+    null_resource.download_binaries,
+    null_resource.generate_manifests,
+  ]
+}
+
+data "template_file" "csr_auto_approve_clusterrole" {
+  count    = !var.managed_infrastructure ? 1 : 0
+  template = <<EOF
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  annotations:
+    openshift.io/description: "Cluster Role for CSR Auto Approve"
+  name: csr-auto-approve-cluster-role
+  namespace: csr-auto-approve
+rules:
+- apiGroups:
+  - '*'
+  resources:
+  - '*'
+  verbs:
+  - '*'
+- nonResourceURLs:
+  - '*'
+  verbs:
+  - '*'
+EOF
+}
+
+resource "local_file" "csr_auto_approve_clusterrole_yaml" {
+  count    = !var.managed_infrastructure ? 1 : 0
+  content  = data.template_file.csr_auto_approve_clusterrole[0].rendered
+  filename = "${local.installer_workspace}/manifests/csr-auto-approve-clusterrole.yaml"
+  depends_on = [
+    null_resource.download_binaries,
+    null_resource.generate_manifests,
+  ]
+}
+
+data "template_file" "csr_auto_approve_clusterrolebinding" {
+  count    = !var.managed_infrastructure ? 1 : 0
+  template = <<EOF
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: csr-auto-approve-cluster-role-binding
+subjects:
+- kind: ServiceAccount
+  name: csr-auto-approve-service-account
+  namespace: csr-auto-approve
+roleRef:
+  kind: ClusterRole
+  apiGroup: rbac.authorization.k8s.io
+  name: csr-auto-approve-cluster-role
+EOF
+}
+
+resource "local_file" "csr_auto_approve_clusterrolebinding_yaml" {
+  count    = !var.managed_infrastructure ? 1 : 0
+  content  = data.template_file.csr_auto_approve_clusterrolebinding[0].rendered
+  filename = "${local.installer_workspace}/manifests/csr-auto-approve-clusterrolebinding.yaml"
+  depends_on = [
+    null_resource.download_binaries,
+    null_resource.generate_manifests,
+  ]
+}
+
+data "template_file" "csr_auto_approve_configmap" {
+  count    = !var.managed_infrastructure ? 1 : 0
+  template = <<EOF
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: data
+  namespace: csr-auto-approve
+data:
+  worker.count: "${var.node_count}"
+  approve.sh: |-
+    #!/bin/bash
+    EXPECTED_WORKER_COUNT=`cat /data/worker.count`
+    CURRENT_WORKER_COUNT=`oc get nodes | grep worker | grep ' Ready' | wc -l`
+    while [ "$CURRENT_WORKER_COUNT" -lt "$EXPECTED_WORKER_COUNT"  ] ;
+    do
+        PENDING_CSRS=`oc get csr | grep Pending | awk '{ print $1 }'`
+        for CSR in $PENDING_CSRS
+        do
+          echo "CSR auto approve approving CSR: $CSR"
+          oc adm certificate approve $CSR
+        done
+        echo "CSR auto approve sleeping for 30 seconds..."
+        sleep 30
+        CURRENT_WORKER_COUNT=`oc get nodes | grep worker | grep ' Ready' | wc -l`
+    done
+EOF
+}
+
+resource "local_file" "csr_auto_approve_configmap_yaml" {
+  count    = !var.managed_infrastructure ? 1 : 0
+  content  = data.template_file.csr_auto_approve_configmap[0].rendered
+  filename = "${local.installer_workspace}/manifests/csr-auto-approve-configmap.yaml"
+  depends_on = [
+    null_resource.download_binaries,
+    null_resource.generate_manifests,
+  ]
+}
+
+data "template_file" "csr_auto_approve_job" {
+  count    = !var.managed_infrastructure ? 1 : 0
+  template = <<EOF
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: csr-auto-approve-job
+  labels:
+    app: csr-auto-approve-job
+  namespace: csr-auto-approve
+spec:
+  parallelism: 1
+  completions: 1
+  activeDeadlineSeconds: 7200
+  ttlSecondsAfterFinished: 3600
+  backoffLimit: 6
+  template:
+    metadata:
+      name: csr-auto-approve
+      labels:
+        app: csr-auto-approve
+      namespace: csr-auto-approve
+    spec:
+      serviceAccountName: csr-auto-approve-service-account
+      nodeSelector:
+        node-role.kubernetes.io/master: ""
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/master
+        operator: Exists
+      containers:
+      - name: auto-approve
+        image: registry.redhat.io/openshift4/ose-cli
+        command:
+          - /data/approve.sh
+        volumeMounts:
+        - name: data
+          mountPath: /data/worker.count
+          subPath: worker.count
+        - name: data
+          mountPath: /data/approve.sh
+          subPath: approve.sh
+      volumes:
+        - name: data
+          configMap:
+            name: data
+            defaultMode: 0755
+      restartPolicy: Never
+EOF
+}
+
+resource "local_file" "csr_auto_approve_job_yaml" {
+  count    = !var.managed_infrastructure ? 1 : 0
+  content  = data.template_file.csr_auto_approve_job[0].rendered
+  filename = "${local.installer_workspace}/manifests/csr-auto-approve-job.yaml"
   depends_on = [
     null_resource.download_binaries,
     null_resource.generate_manifests,

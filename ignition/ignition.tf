@@ -100,6 +100,7 @@ resource "null_resource" "generate_ignition" {
     local_file.cluster-infrastructure-02-config,
     local_file.cluster-dns-02-config,
     local_file.cloud-provider-config,
+    local_file.cluster-ingress-default-ingresscontroller,
     local_file.openshift-cluster-api_master-machines,
     local_file.openshift-cluster-api_worker-machineset,
     local_file.openshift-cluster-api_infra-machineset,
