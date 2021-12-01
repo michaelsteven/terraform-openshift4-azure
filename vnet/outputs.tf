@@ -6,6 +6,14 @@ output "public_lb_backend_pool_v6_id" {
   value = local.need_public_ipv6 ? azurerm_lb_backend_address_pool.public_lb_pool_v6[0].id : null
 }
 
+output "internal_lb_apps_backend_pool_v4_id" {
+  value = var.use_ipv4 ? azurerm_lb_backend_address_pool.internal_lb_worker_pool_v4[0].id : null
+}
+
+output "internal_lb_apps_backend_pool_v6_id" {
+  value = var.use_ipv6 ? azurerm_lb_backend_address_pool.internal_lb_worker_pool_v6[0].id : null
+}
+
 output "internal_lb_backend_pool_v4_id" {
   value = var.use_ipv4 ? azurerm_lb_backend_address_pool.internal_lb_controlplane_pool_v4[0].id : null
 }

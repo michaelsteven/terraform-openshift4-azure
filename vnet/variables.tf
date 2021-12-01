@@ -91,3 +91,8 @@ variable "dns_api_ip" {
   type = string
   default = ""
 }
+
+variable "dns_apps_ip" {
+  type = string
+  default = ""
+}

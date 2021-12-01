@@ -185,3 +185,9 @@ variable "apps_ip" {
   type    = string
   default = ""
 }
+
+variable "managed_infrastructure" {
+  description = "Define if nodes are managed by openshift"
+  type        = bool
+  default     = true  
+}

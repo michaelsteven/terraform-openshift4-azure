@@ -118,3 +118,9 @@ variable "phase1_complete" {
   type        = bool
   default     = false  
 }
+
+variable "managed_infrastructure" {
+  description = "Define if nodes are is managed by openshift"
+  type        = bool
+  default     = true  
+}

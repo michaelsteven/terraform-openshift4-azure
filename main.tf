@@ -33,7 +33,6 @@ resource "local_file" "write_public_key" {
   file_permission = 0600
 }
 
-
 data "template_file" "azure_sp_json" {
   template = <<EOF
 {
@@ -96,6 +95,7 @@ module "vnet" {
   use_ipv6                  = var.use_ipv6
   emulate_single_stack_ipv6 = var.azure_emulate_single_stack_ipv6
   dns_api_ip                = var.api_and_api-int_dns_ip
+  dns_apps_ip               = var.apps_dns_ip
 }
 
 module "ignition" {
@@ -141,6 +141,7 @@ module "ignition" {
   proxy_config                  = var.proxy_config
   trust_bundle                  = var.openshift_additional_trust_bundle
   byo_dns                       = var.openshift_byo_dns
+  managed_infrastructure        = var.openshift_managed_infrastructure
 }
 
 module "bootstrap" {
@@ -149,7 +150,7 @@ module "bootstrap" {
   region                 = var.azure_region
   vm_size                = var.azure_bootstrap_vm_type
   vm_image               = azurerm_image.cluster.id
-  identity               = azurerm_user_assigned_identity.main.id
+  identity               = var.openshift_managed_infrastructure ? azurerm_user_assigned_identity.main[0].id : ""
   cluster_id             = local.cluster_id
   ignition               = module.ignition.bootstrap_ignition
   subnet_id              = module.vnet.master_subnet_id
@@ -169,7 +170,7 @@ module "bootstrap" {
 
   phased_approach           = var.phased_approach 
   phase1_complete           = var.phase1_complete
-
+  managed_infrastructure    = var.openshift_managed_infrastructure
 }
 
 module "master" {
@@ -180,7 +181,7 @@ module "master" {
   availability_zones     = var.azure_master_availability_zones
   vm_size                = var.azure_master_vm_type
   vm_image               = azurerm_image.cluster.id
-  identity               = azurerm_user_assigned_identity.main.id
+  identity               = var.openshift_managed_infrastructure ? azurerm_user_assigned_identity.main[0].id : ""
   ignition               = module.ignition.master_ignition
   elb_backend_pool_v4_id = module.vnet.public_lb_backend_pool_v4_id
   elb_backend_pool_v6_id = module.vnet.public_lb_backend_pool_v6_id
@@ -200,7 +201,44 @@ module "master" {
 
   phased_approach           = var.phased_approach 
   phase1_complete           = var.phase1_complete
+  managed_infrastructure    = var.openshift_managed_infrastructure
 
+  depends_on = [module.bootstrap]
+}
+
+module "worker" {
+  count                  = !var.openshift_managed_infrastructure ? 1 : 0
+
+  source                 = "./worker"
+  resource_group_name    = data.azurerm_resource_group.main.name
+  cluster_id             = local.cluster_id
+  region                 = var.azure_region
+  availability_zones     = var.azure_master_availability_zones
+  vm_size                = var.azure_worker_vm_type
+  vm_image               = azurerm_image.cluster.id
+  identity               = var.openshift_managed_infrastructure ? azurerm_user_assigned_identity.main[0].id : ""
+  ignition               = module.ignition.worker_ignition
+  elb_backend_pool_v4_id = module.vnet.public_lb_backend_pool_v4_id
+  elb_backend_pool_v6_id = module.vnet.public_lb_backend_pool_v6_id
+  ilb_backend_pool_v4_id = module.vnet.internal_lb_apps_backend_pool_v4_id
+  ilb_backend_pool_v6_id = module.vnet.internal_lb_apps_backend_pool_v6_id
+  subnet_id              = module.vnet.worker_subnet_id
+  instance_count         = var.worker_count
+  storage_account        = var.storage_account_exists ? data.azurerm_storage_account.cluster[0] : azurerm_storage_account.cluster[0]
+  os_volume_type         = var.azure_worker_root_volume_type
+  os_volume_size         = var.azure_worker_root_volume_size
+  private                = module.vnet.private
+  outbound_udr           = var.azure_outbound_user_defined_routing
+
+  use_ipv4                  = var.use_ipv4 || var.azure_emulate_single_stack_ipv6
+  use_ipv6                  = var.use_ipv6
+  emulate_single_stack_ipv6 = var.azure_emulate_single_stack_ipv6
+
+  phased_approach           = var.phased_approach 
+  phase1_complete           = var.phase1_complete
+  managed_infrastructure    = var.openshift_managed_infrastructure
+
+  depends_on = [module.master]
 }
 
 resource "azurerm_resource_group" "main" {
@@ -242,6 +280,8 @@ resource "azurerm_storage_account" "cluster" {
 }
  
 resource "azurerm_user_assigned_identity" "main" {
+  count = var.openshift_managed_infrastructure ? 1 : 0
+
   resource_group_name = data.azurerm_resource_group.main.name
   location            = data.azurerm_resource_group.main.location
 
@@ -253,17 +293,19 @@ data "azurerm_role_definition" "contributor" {
 }
 
 resource "azurerm_role_assignment" "main" {
+  count = var.openshift_managed_infrastructure ? 1 : 0
+
   scope                = data.azurerm_resource_group.main.id
   role_definition_id = (var.azure_role_id_cluster == "") ? data.azurerm_role_definition.contributor.id : var.azure_role_id_cluster
-  principal_id         = azurerm_user_assigned_identity.main.principal_id
+  principal_id         = azurerm_user_assigned_identity.main[0].principal_id
 }
 
 resource "azurerm_role_assignment" "network" {
-  count = var.azure_preexisting_network ? 1 : 0
+  count = var.openshift_managed_infrastructure && var.azure_preexisting_network ? 1 : 0
 
   scope                = data.azurerm_resource_group.network[0].id
   role_definition_id = (var.azure_role_id_network == "") ? data.azurerm_role_definition.contributor.id : var.azure_role_id_network
-  principal_id         = azurerm_user_assigned_identity.main.principal_id
+  principal_id         = azurerm_user_assigned_identity.main[0].principal_id
 }
 
 # copy over the vhd to cluster resource group and create an image using that
@@ -322,9 +364,10 @@ if [[ "${var.azure_private}" == "false" ]]; then
 fi
 az network nic delete -g ${data.azurerm_resource_group.main.name} -n ${local.cluster_id}-bootstrap-nic
 export KUBECONFIG=./installer-files/auth/kubeconfig
-if  [ "${var.apps_dns_ip}" != "" ]; then
-  oc patch svc router-default --patch '{"spec":{"loadBalancerIP":"${var.apps_dns_ip}"}}' --type=merge -n openshift-ingress
-fi
+export PATH=./installer-files:$PATH
+# if  [ "${var.apps_dns_ip}" != "" ]; then
+#   oc patch svc router-default --patch '{"spec":{"loadBalancerIP":"${var.apps_dns_ip}"}}' --type=merge -n openshift-ingress
+# fi
 if ${!var.use_default_imageregistry}; then
   oc patch configs.imageregistry.operator.openshift.io cluster --patch '{"spec":{"managementState":"Removed"}}' --type=merge
 fi

@@ -1,16 +1,16 @@
 locals {
-  // The name of the masters' ipconfiguration is hardcoded to "pipconfig". It needs to match cluster-api
-  // https://github.com/openshift/cluster-api-provider-azure/blob/master/pkg/cloud/azure/services/networkinterfaces/networkinterfaces.go#L131
+  // The name of the workers' ipconfiguration is hardcoded to "pipconfig". It needs to match cluster-api
+  // https://github.com/openshift/cluster-api-provider-azure/blob/worker/pkg/cloud/azure/services/networkinterfaces/networkinterfaces.go#L131
   ip_v4_configuration_name = "pipConfig"
   // TODO: Azure machine provider probably needs to look for pipConfig-v6 as well (or a different name like pipConfig-secondary)
   ip_v6_configuration_name = "pipConfig-v6"
   identity_list = var.managed_infrastructure ? [var.identity] : []
 }
 
-resource "azurerm_network_interface" "master" {
+resource "azurerm_network_interface" "worker" {
   count = var.instance_count
 
-  name                = "${var.cluster_id}-master${count.index}-nic"
+  name                = "${var.cluster_id}-worker${count.index}-nic"
   location            = var.region
   resource_group_name = var.resource_group_name
 
@@ -46,54 +46,54 @@ resource "azurerm_network_interface" "master" {
   }
 }
 
-resource "azurerm_network_interface_backend_address_pool_association" "master_v4" {
+resource "azurerm_network_interface_backend_address_pool_association" "worker_v4" {
   // This is required because terraform cannot calculate counts during plan phase completely and therefore the `vnet/public-lb.tf`
   // conditional need to be recreated. See https://github.com/hashicorp/terraform/issues/12570
   count = (! var.private || ! var.outbound_udr) ? var.instance_count : 0
 
-  network_interface_id    = element(azurerm_network_interface.master.*.id, count.index)
+  network_interface_id    = element(azurerm_network_interface.worker.*.id, count.index)
   backend_address_pool_id = var.elb_backend_pool_v4_id
   ip_configuration_name   = local.ip_v4_configuration_name
 }
 
-resource "azurerm_network_interface_backend_address_pool_association" "master_v6" {
+resource "azurerm_network_interface_backend_address_pool_association" "worker_v6" {
   // This is required because terraform cannot calculate counts during plan phase completely and therefore the `vnet/public-lb.tf`
   // conditional need to be recreated. See https://github.com/hashicorp/terraform/issues/12570
   count = var.use_ipv6 && (! var.private || ! var.outbound_udr) ? var.instance_count : 0
 
-  network_interface_id    = element(azurerm_network_interface.master.*.id, count.index)
+  network_interface_id    = element(azurerm_network_interface.worker.*.id, count.index)
   backend_address_pool_id = var.elb_backend_pool_v6_id
   ip_configuration_name   = local.ip_v6_configuration_name
 }
 
-resource "azurerm_network_interface_backend_address_pool_association" "master_internal_v4" {
+resource "azurerm_network_interface_backend_address_pool_association" "worker_internal_v4" {
   count = var.use_ipv4 ? var.instance_count : 0
 
-  network_interface_id    = element(azurerm_network_interface.master.*.id, count.index)
+  network_interface_id    = element(azurerm_network_interface.worker.*.id, count.index)
   backend_address_pool_id = var.ilb_backend_pool_v4_id
   ip_configuration_name   = local.ip_v4_configuration_name
 }
 
-resource "azurerm_network_interface_backend_address_pool_association" "master_internal_v6" {
+resource "azurerm_network_interface_backend_address_pool_association" "worker_internal_v6" {
   count = var.use_ipv6 ? var.instance_count : 0
 
-  network_interface_id    = element(azurerm_network_interface.master.*.id, count.index)
+  network_interface_id    = element(azurerm_network_interface.worker.*.id, count.index)
   backend_address_pool_id = var.ilb_backend_pool_v6_id
   ip_configuration_name   = local.ip_v6_configuration_name
 }
 
-resource "azurerm_linux_virtual_machine" "master" {
+resource "azurerm_linux_virtual_machine" "worker" {
   count = !var.phased_approach || (var.phased_approach && var.phase1_complete) ? var.instance_count : 0 
 
   depends_on = [
-    azurerm_network_interface.master
+    azurerm_network_interface.worker
   ]
   
-  name                  = "${var.cluster_id}-master-${count.index}"
+  name                  = "${var.cluster_id}-worker-${count.index}"
   location              = var.region
-  zone                  = length(var.availability_zones) > 1 ? var.availability_zones[count.index] : var.availability_zones[0]
+  zone                  = length(var.availability_zones) > 1 ? var.availability_zones[count.index % length(var.availability_zones)] : var.availability_zones[0]
   resource_group_name   = var.resource_group_name
-  network_interface_ids = [element(azurerm_network_interface.master.*.id, count.index)]
+  network_interface_ids = [element(azurerm_network_interface.worker.*.id, count.index)]
   size                  = var.vm_size
   admin_username        = "core"
   # The password is normally applied by WALA (the Azure agent), but this
@@ -111,7 +111,7 @@ resource "azurerm_linux_virtual_machine" "master" {
   }
 
   os_disk {
-    name                 = "${var.cluster_id}-master-${count.index}_OSDisk" # os disk name needs to match cluster-api convention
+    name                 = "${var.cluster_id}-worker-${count.index}_OSDisk" # os disk name needs to match cluster-api convention
     caching              = "ReadOnly"
     storage_account_type = var.os_volume_type
     disk_size_gb         = var.os_volume_size
@@ -121,7 +121,7 @@ resource "azurerm_linux_virtual_machine" "master" {
 
   //we don't provide a ssh key, because it is set with ignition. 
   //it is required to provide at least 1 auth method to deploy a linux vm
-  computer_name = "${var.cluster_id}-master-${count.index}"
+  computer_name = "${var.cluster_id}-worker-${count.index}"
   custom_data   = base64encode(var.ignition)
 
   boot_diagnostics {
