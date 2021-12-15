@@ -10,7 +10,7 @@ notes.txt
 .terraform.lock.hcl
 
 # .tfvars files
-*.tfvars
+*.tfvars*
 
 # Mac stuff
 .DS_Store
