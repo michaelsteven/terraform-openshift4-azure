@@ -395,3 +395,38 @@ variable "azure_worker_root_volume_type" {
   default     = "Premium_LRS"
 }
 
+variable "storage_account_sas" {
+  description = "Define if a SAS storage account is to be used"
+  type        = bool
+  default     = false
+}
+
+variable "azure_storage_blob_sas_uri" {
+  description = "The vhd image full sas uri if the image already exists"
+  type        = string
+  default     = ""
+}
+
+variable "azure_container_name_vhd" {
+  description = "Name of the container used for SAS storage for the vhd file"
+  type        = string
+  default     = ""
+}
+
+variable "azure_sas_token_vhd" {
+  description = "The SAS storage token string for the vhd file"
+  type        = string
+  default     = ""
+}
+
+variable "azure_container_name_ignition" {
+  description = "Name of the container used for SAS storage for the ignition files"
+  type        = string
+  default     = ""
+}
+
+variable "azure_sas_token_ignition" {
+  description = "The SAS storage token string for the ignition files"
+  type        = string
+  default     = ""
+}
