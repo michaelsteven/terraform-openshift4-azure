@@ -203,9 +203,8 @@ resource "local_file" "cluster-ingress-default-ingresscontroller" {
   ]
 }
 
-
 data "template_file" "openshift-cluster-api_master-machines" {
-  count    = var.managed_infrastructure ? var.master_count : 0
+  count    = !var.managed_infrastructure ? var.master_count : 0
   template = <<EOF
 apiVersion: machine.openshift.io/v1beta1
 kind: Machine
@@ -260,7 +259,7 @@ EOF
 }
 
 resource "local_file" "openshift-cluster-api_master-machines" {
-  count    = var.managed_infrastructure ? var.master_count : 0
+  count    = !var.managed_infrastructure ? var.master_count : 0
   content  = element(data.template_file.openshift-cluster-api_master-machines.*.rendered, count.index)
   filename = "${local.installer_workspace}/openshift/99_openshift-cluster-api_master-machines-${count.index}.yaml"
   depends_on = [
@@ -271,6 +270,7 @@ resource "local_file" "openshift-cluster-api_master-machines" {
 locals {
   zone_node_replicas  = [for idx in range(length(var.availability_zones)) : floor(var.node_count / length(var.availability_zones)) + (idx + 1 > (var.node_count % length(var.availability_zones)) ? 0 : 1)]
   zone_infra_replicas = [for idx in range(length(var.availability_zones)) : floor(var.infra_count / length(var.availability_zones)) + (idx + 1 > (var.infra_count % length(var.availability_zones)) ? 0 : 1)]
+  node_count          = var.node_count + var.infra_count
 }
 
 data "template_file" "openshift-cluster-api_worker-machineset" {
@@ -342,6 +342,61 @@ spec:
 EOF
 }
 
+data "template_file" "openshift-cluster-api_worker-machines" {
+  count    = !var.managed_infrastructure ? length(var.availability_zones) : 0
+  template = <<EOF
+apiVersion: machine.openshift.io/v1beta1
+kind: Machine
+metadata:
+  creationTimestamp: null
+  labels:
+    machine.openshift.io/cluster-api-cluster: ${var.cluster_id}
+    machine.openshift.io/cluster-api-machine-role: worker
+    machine.openshift.io/cluster-api-machine-type: worker
+  name: ${var.cluster_id}-worker-${count.index}
+  namespace: openshift-machine-api
+spec:
+  metadata:
+    creationTimestamp: null
+  providerSpec:
+    value:
+      apiVersion: azureproviderconfig.openshift.io/v1beta1
+      credentialsSecret:
+        name: azure-cloud-credentials
+        namespace: openshift-machine-api
+      image:
+        offer: ""
+        publisher: ""
+        resourceID: /resourceGroups/${var.resource_group_name}/providers/Microsoft.Compute/images/${var.cluster_id}
+        sku: ""
+        version: ""
+      internalLoadBalancer: ""
+      kind: AzureMachineProviderSpec
+      location: ${var.azure_region}
+      managedIdentity: %{ if var.managed_infrastructure }${var.cluster_id}-identity%{ else }""%{ endif }
+      metadata:
+        creationTimestamp: null
+      natRule: null
+      networkResourceGroup: ${var.network_resource_group_name}
+      osDisk:
+        diskSizeGB: ${var.worker_os_disk_size}
+        managedDisk:
+          storageAccountType: Premium_LRS
+        osType: Linux
+      publicIP: false
+      publicLoadBalancer: ""
+      resourceGroup: ${var.resource_group_name}
+      sshPrivateKey: ""
+      sshPublicKey: ""
+      subnet: ${var.compute_subnet}
+      userDataSecret:
+        name: worker-user-data
+      vmSize: ${var.worker_vm_type}
+      vnet: ${var.virtual_network_name}
+      %{if length(var.availability_zones) > 1}zone: "${var.availability_zones[count.index]}"%{endif}
+EOF
+}
+
 resource "local_file" "openshift-cluster-api_worker-machineset" {
   count    = var.managed_infrastructure ? length(var.availability_zones) : 0
   content  = element(data.template_file.openshift-cluster-api_worker-machineset.*.rendered, count.index)
@@ -352,8 +407,18 @@ resource "local_file" "openshift-cluster-api_worker-machineset" {
   ]
 }
 
+resource "local_file" "openshift-cluster-api_worker-machines" {
+  count    = !var.managed_infrastructure ? length(var.availability_zones) : 0
+  content  = element(data.template_file.openshift-cluster-api_worker-machines.*.rendered, count.index)
+  filename = "${local.installer_workspace}/openshift/99_openshift-cluster-api_worker-machines-${count.index}.yaml"
+  depends_on = [
+    null_resource.download_binaries,
+    null_resource.generate_manifests,
+  ]
+}
+
 data "template_file" "openshift-cluster-api_infra-machineset" {
-  count    = var.infra_count > 0 ? length(var.availability_zones) : 0
+  count    = var.managed_infrastructure && var.infra_count > 0 ? length(var.availability_zones) : 0
   template = <<EOF
 apiVersion: machine.openshift.io/v1beta1
 kind: MachineSet
@@ -423,8 +488,65 @@ spec:
 EOF
 }
 
+data "template_file" "openshift-cluster-api_infra-machines" {
+  count    = !var.managed_infrastructure && var.infra_count > 0 ? length(var.availability_zones) : 0
+  template = <<EOF
+apiVersion: machine.openshift.io/v1beta1
+kind: Machine
+metadata:
+  creationTimestamp: null
+  labels:
+    machine.openshift.io/cluster-api-cluster: ${var.cluster_id}
+    machine.openshift.io/cluster-api-machine-role: infra
+    machine.openshift.io/cluster-api-machine-type: infra
+  name: ${var.cluster_id}-infra-${count.index}
+  namespace: openshift-machine-api
+spec:
+  metadata:
+    creationTimestamp: null
+    labels:
+      node-role.kubernetes.io/infra: ""
+  providerSpec:
+    value:
+      apiVersion: azureproviderconfig.openshift.io/v1beta1
+      credentialsSecret:
+        name: azure-cloud-credentials
+        namespace: openshift-machine-api
+      image:
+        offer: ""
+        publisher: ""
+        resourceID: /resourceGroups/${var.resource_group_name}/providers/Microsoft.Compute/images/${var.cluster_id}
+        sku: ""
+        version: ""
+      internalLoadBalancer: ""
+      kind: AzureMachineProviderSpec
+      location: ${var.azure_region}
+      managedIdentity: %{ if var.managed_infrastructure }${var.cluster_id}-identity%{ else }""%{ endif }
+      metadata:
+        creationTimestamp: null
+      natRule: null
+      networkResourceGroup: ${var.network_resource_group_name}
+      osDisk:
+        diskSizeGB: ${var.infra_os_disk_size}
+        managedDisk:
+          storageAccountType: Premium_LRS
+        osType: Linux
+      publicIP: false
+      publicLoadBalancer: ""
+      resourceGroup: ${var.resource_group_name}
+      sshPrivateKey: ""
+      sshPublicKey: ""
+      subnet: ${var.compute_subnet}
+      userDataSecret:
+        name: worker-user-data
+      vmSize: ${var.infra_vm_type}
+      vnet: ${var.virtual_network_name}
+      %{if length(var.availability_zones) > 1}zone: "${var.availability_zones[count.index]}"%{endif}
+EOF
+}
+
 resource "local_file" "openshift-cluster-api_infra-machineset" {
-  count    = var.infra_count > 0 ? length(var.availability_zones) : 0
+  count    = var.managed_infrastructure && var.infra_count > 0 ? length(var.availability_zones) : 0
   content  = element(data.template_file.openshift-cluster-api_infra-machineset.*.rendered, count.index)
   filename = "${local.installer_workspace}/openshift/99_openshift-cluster-api_infra-machineset-${count.index}.yaml"
   depends_on = [
@@ -433,6 +555,15 @@ resource "local_file" "openshift-cluster-api_infra-machineset" {
   ]
 }
 
+resource "local_file" "openshift-cluster-api_infra-machines" {
+  count    = !var.managed_infrastructure && var.infra_count > 0 ? length(var.availability_zones) : 0
+  content  = element(data.template_file.openshift-cluster-api_infra-machines.*.rendered, count.index)
+  filename = "${local.installer_workspace}/openshift/99_openshift-cluster-api_infra-machines-${count.index}.yaml"
+  depends_on = [
+    null_resource.download_binaries,
+    null_resource.generate_manifests,
+  ]
+}
 
 data "template_file" "cloud-creds-secret-kube-system" {
   template = <<EOF
@@ -894,12 +1025,12 @@ metadata:
   name: data
   namespace: csr-auto-approve
 data:
-  worker.count: "${var.node_count}"
+  node.count: "${local.node_count}"
   approve.sh: |-
     #!/bin/bash
-    EXPECTED_WORKER_COUNT=`cat /data/worker.count`
-    CURRENT_WORKER_COUNT=`oc get nodes | grep worker | grep ' Ready' | wc -l`
-    while [ "$CURRENT_WORKER_COUNT" -lt "$EXPECTED_WORKER_COUNT"  ] ;
+    EXPECTED_NODE_COUNT=`cat /data/node.count`
+    CURRENT_NODE_COUNT=`oc get nodes | grep worker | grep ' Ready' | wc -l`
+    while [ "$CURRENT_NODE_COUNT" -lt "$EXPECTED_NODE_COUNT"  ] ;
     do
         PENDING_CSRS=`oc get csr | grep Pending | awk '{ print $1 }'`
         for CSR in $PENDING_CSRS
@@ -909,7 +1040,7 @@ data:
         done
         echo "CSR auto approve sleeping for 30 seconds..."
         sleep 30
-        CURRENT_WORKER_COUNT=`oc get nodes | grep worker | grep ' Ready' | wc -l`
+        CURRENT_NODE_COUNT=`oc get nodes | grep worker | grep ' Ready' | wc -l`
     done
 EOF
 }
@@ -961,8 +1092,8 @@ spec:
           - /data/approve.sh
         volumeMounts:
         - name: data
-          mountPath: /data/worker.count
-          subPath: worker.count
+          mountPath: /data/node.count
+          subPath: node.count
         - name: data
           mountPath: /data/approve.sh
           subPath: approve.sh
