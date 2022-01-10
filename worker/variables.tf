@@ -141,3 +141,9 @@ variable "managed_infrastructure" {
   type        = bool
   default     = true  
 }
+
+variable "node_role" {
+  description = "Identify the node role as a worker or infra node"
+  type        = string
+  default     = "worker"
+}
