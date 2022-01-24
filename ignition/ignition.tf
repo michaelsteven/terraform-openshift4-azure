@@ -9,6 +9,8 @@ resource "azurerm_storage_account" "ignition" {
 }
 
 data "azurerm_storage_account" "ignition" {
+  count = var.ignition_sas_token == "" ? 1 : 0
+
   name                     = var.storage_account_name != "" ? var.storage_account_name : azurerm_storage_account.ignition[0].name
   resource_group_name      = var.storage_resource_group
 }
@@ -16,7 +18,7 @@ data "azurerm_storage_account" "ignition" {
 data "azurerm_storage_account_sas" "ignition" {
   count = var.ignition_sas_token == "" ? 1 : 0
 
-  connection_string = data.azurerm_storage_account.ignition.primary_connection_string
+  connection_string = data.azurerm_storage_account.ignition[0].primary_connection_string
   https_only        = true
 
   resource_types {
@@ -52,7 +54,7 @@ resource "azurerm_storage_container" "ignition" {
   count = var.ignition_sas_token == "" ? 1 : 0
 
   name                  = "ignition-${var.cluster_id}"
-  storage_account_name  = data.azurerm_storage_account.ignition.name
+  storage_account_name  = data.azurerm_storage_account.ignition[0].name
   container_access_type = "private"
 }
 
@@ -60,7 +62,7 @@ locals {
   installer_workspace     = "${path.root}/installer-files/"
   openshift_installer_url = "${var.openshift_installer_url}/${var.openshift_version}/"
   cluster_nr              = join("", split("-", var.cluster_id))
-  ignition_base_uri       = "https://${data.azurerm_storage_account.ignition.name}.blob.core.windows.net/${var.ignition_sas_container_name}"
+  ignition_base_uri       = "https://${var.storage_account_name}.blob.core.windows.net/${var.ignition_sas_container_name}"
 }
 
 resource "null_resource" "download_binaries" {
@@ -136,7 +138,7 @@ resource "azurerm_storage_blob" "ignition-bootstrap" {
 
   name                   = "bootstrap.ign"
   source                 = "${local.installer_workspace}/bootstrap.ign"
-  storage_account_name   = data.azurerm_storage_account.ignition.name
+  storage_account_name   = data.azurerm_storage_account.ignition[0].name
   storage_container_name = azurerm_storage_container.ignition[0].name
   type                   = "Block"
   depends_on = [
@@ -163,7 +165,7 @@ resource "azurerm_storage_blob" "ignition-master" {
 
   name                   = "master.ign"
   source                 = "${local.installer_workspace}/master.ign"
-  storage_account_name   = data.azurerm_storage_account.ignition.name
+  storage_account_name   = data.azurerm_storage_account.ignition[0].name
   storage_container_name = azurerm_storage_container.ignition[0].name
   type                   = "Block"
   depends_on = [
@@ -190,7 +192,7 @@ resource "azurerm_storage_blob" "ignition-worker" {
 
   name                   = "worker.ign"
   source                 = "${local.installer_workspace}/worker.ign"
-  storage_account_name   = data.azurerm_storage_account.ignition.name
+  storage_account_name   = data.azurerm_storage_account.ignition[0].name
   storage_container_name = azurerm_storage_container.ignition[0].name
   type                   = "Block"
   depends_on = [

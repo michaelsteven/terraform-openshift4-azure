@@ -2,7 +2,7 @@ locals {
   bootstrap_nic_ip_v4_configuration_name = "bootstrap-nic-ip-v4"
   bootstrap_nic_ip_v6_configuration_name = "bootstrap-nic-ip-v6"
   identity_list                          = var.managed_infrastructure ? [var.identity] : []
-  bootlogs_base_uri                      = "https://${var.bootlogs_storage_account.name}.blob.core.windows.net/"
+  bootlogs_base_uri                      = "https://${var.bootlogs_storage_account_name}.blob.core.windows.net/"
 }
 
 resource "azurerm_public_ip" "bootstrap_public_ip_v4" {
@@ -153,7 +153,7 @@ resource "azurerm_linux_virtual_machine" "bootstrap" {
   custom_data   = base64encode(var.ignition)
 
   boot_diagnostics {
-    storage_account_uri = var.bootlogs_sas_token != "" ? "${local.bootlogs_base_uri}?${var.bootlogs_sas_token}" : var.bootlogs_storage_account.primary_blob_endpoint
+    storage_account_uri = var.bootlogs_sas_token != "" ? "${local.bootlogs_base_uri}?${var.bootlogs_sas_token}" : var.bootlogs_storage_account[0].primary_blob_endpoint
   }
 
   depends_on = [

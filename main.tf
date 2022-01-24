@@ -57,14 +57,15 @@ locals {
     },
     var.azure_extra_tags,
   )
-  azure_network_resource_group_name = (var.azure_preexisting_network && var.azure_network_resource_group_name != null) ? var.azure_network_resource_group_name : data.azurerm_resource_group.main.name
-  azure_virtual_network             = (var.azure_preexisting_network && var.azure_virtual_network != null) ? var.azure_virtual_network : "${local.cluster_id}-vnet"
-  azure_control_plane_subnet        = (var.azure_preexisting_network && var.azure_control_plane_subnet != null) ? var.azure_control_plane_subnet : "${local.cluster_id}-master-subnet"
-  azure_compute_subnet              = (var.azure_preexisting_network && var.azure_compute_subnet != null) ? var.azure_compute_subnet : "${local.cluster_id}-worker-subnet"
-  public_ssh_key                    = var.openshift_ssh_key == "" ? tls_private_key.installkey[0].public_key_openssh : file(var.openshift_ssh_key)
-  major_version                     = join(".", slice(split(".", var.openshift_version), 0, 2))
-  installer_workspace               = "${path.root}/installer-files/"
-  azure_image_id                    = var.azure_image_id != "" ? var.azure_image_id : module.image[0].image_cluster_id
+  azure_network_resource_group_name   = (var.azure_preexisting_network && var.azure_network_resource_group_name != null) ? var.azure_network_resource_group_name : data.azurerm_resource_group.main.name
+  azure_virtual_network               = (var.azure_preexisting_network && var.azure_virtual_network != null) ? var.azure_virtual_network : "${local.cluster_id}-vnet"
+  azure_control_plane_subnet          = (var.azure_preexisting_network && var.azure_control_plane_subnet != null) ? var.azure_control_plane_subnet : "${local.cluster_id}-master-subnet"
+  azure_compute_subnet                = (var.azure_preexisting_network && var.azure_compute_subnet != null) ? var.azure_compute_subnet : "${local.cluster_id}-worker-subnet"
+  public_ssh_key                      = var.openshift_ssh_key == "" ? tls_private_key.installkey[0].public_key_openssh : file(var.openshift_ssh_key)
+  major_version                       = join(".", slice(split(".", var.openshift_version), 0, 2))
+  installer_workspace                 = "${path.root}/installer-files/"
+  azure_image_id                      = var.azure_image_id != "" ? var.azure_image_id : module.image[0].image_cluster_id
+  azure_bootlogs_storage_account_name = var.azure_bootlogs_sas_token != "" ? var.azure_bootlogs_storage_account_name : data.azurerm_storage_account.bootlogs[0].name
 }
 
 module "image" {
@@ -171,8 +172,9 @@ module "bootstrap" {
   ilb_backend_pool_v4_id    = module.vnet.internal_lb_backend_pool_v4_id
   ilb_backend_pool_v6_id    = module.vnet.internal_lb_backend_pool_v6_id
   tags                      = local.tags
-  bootlogs_storage_account  = data.azurerm_storage_account.bootlogs
-  bootlogs_sas_token        = var.azure_bootlogs_sas_token
+  bootlogs_storage_account      = data.azurerm_storage_account.bootlogs
+  bootlogs_storage_account_name = local.azure_bootlogs_storage_account_name
+  bootlogs_sas_token            = var.azure_bootlogs_sas_token
   nsg_name                  = module.vnet.cluster_nsg_name
   private                   = module.vnet.private
   outbound_udr              = var.azure_outbound_user_defined_routing
@@ -202,8 +204,9 @@ module "master" {
   ilb_backend_pool_v6_id = module.vnet.internal_lb_backend_pool_v6_id
   subnet_id              = module.vnet.master_subnet_id
   instance_count         = var.master_count
-  bootlogs_storage_account  = data.azurerm_storage_account.bootlogs
-  bootlogs_sas_token        = var.azure_bootlogs_sas_token
+  bootlogs_storage_account      = data.azurerm_storage_account.bootlogs
+  bootlogs_storage_account_name = local.azure_bootlogs_storage_account_name
+  bootlogs_sas_token            = var.azure_bootlogs_sas_token
   os_volume_type         = var.azure_master_root_volume_type
   os_volume_size         = var.azure_master_root_volume_size
   private                = module.vnet.private
@@ -239,8 +242,9 @@ module "infra" {
   ilb_backend_pool_v6_id = module.vnet.internal_lb_apps_backend_pool_v6_id
   subnet_id              = module.vnet.worker_subnet_id
   instance_count         = var.infra_count
-  bootlogs_storage_account  = data.azurerm_storage_account.bootlogs
-  bootlogs_sas_token        = var.azure_bootlogs_sas_token
+  bootlogs_storage_account      = data.azurerm_storage_account.bootlogs
+  bootlogs_storage_account_name = local.azure_bootlogs_storage_account_name
+  bootlogs_sas_token            = var.azure_bootlogs_sas_token
   os_volume_type         = var.azure_worker_root_volume_type
   os_volume_size         = var.azure_infra_root_volume_size
   private                = module.vnet.private
@@ -276,8 +280,9 @@ module "worker" {
   ilb_backend_pool_v6_id = module.vnet.internal_lb_apps_backend_pool_v6_id
   subnet_id              = module.vnet.worker_subnet_id
   instance_count         = var.worker_count
-  bootlogs_storage_account  = data.azurerm_storage_account.bootlogs
-  bootlogs_sas_token        = var.azure_bootlogs_sas_token
+  bootlogs_storage_account      = data.azurerm_storage_account.bootlogs
+  bootlogs_storage_account_name = local.azure_bootlogs_storage_account_name
+  bootlogs_sas_token            = var.azure_bootlogs_sas_token
   os_volume_type         = var.azure_worker_root_volume_type
   os_volume_size         = var.azure_worker_root_volume_size
   private                = module.vnet.private
@@ -335,6 +340,8 @@ resource "azurerm_storage_account" "bootlogs" {
 }
 
 data "azurerm_storage_account" "bootlogs" {
+  count = var.azure_bootlogs_sas_token == "" ? 1 : 0
+
   name                     = var.azure_bootlogs_storage_account_name != "" ? var.azure_bootlogs_storage_account_name : azurerm_storage_account.bootlogs[0].name
   resource_group_name      = data.azurerm_resource_group.bootlogs_storage.name
 }
