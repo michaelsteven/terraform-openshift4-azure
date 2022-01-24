@@ -293,30 +293,6 @@ variable "openshift_byo_dns" {
   default     = false
 }
 
-variable "azure_storage_account_name" {
-  description = "Existing Storage Account Name"
-  type        = string
-  default     = ""
-}
-
-variable "azure_storage_vhd_container_name" {
-  description = "Existing Storage Account Container Name"
-  type        = string
-  default     = ""
-}
-
-variable "azure_storage_rg" {
-  description = "Existing Storage Account Resource Group"
-  type        = string
-  default     = ""
-}
-
-variable "rh_coreos_vhd_url" {
-  description = "Existing coreos VHD location"
-  type        = string
-  default     = ""
-}
-
 variable "api_and_api-int_dns_ip" {
   description = "The dns ip assigned to openshift api and api-int"
   type        = string
@@ -329,28 +305,82 @@ variable "apps_dns_ip" {
   default     = ""
 }
 
-variable "storage_account_exists" {
-  description = "Define if existing storage account to be used"
-  type        = bool
-  default     = false
-}
-
-variable "azure_storage_container_name" {
-  description = "Azure Container name storing vhd file"
+variable "azure_image_id" {
+  description = "The azure image id for the coreos vm boot image"
   type        = string
   default     = ""
 }
 
-variable "azure_storage_blob_name" {
-  description = "azure blob which is the coreos vhd file"
+variable "azure_image_storage_rg" {
+  description = "Existing Storage Account Resource Group for the VM Image"
   type        = string
   default     = ""
 }
 
-variable "vhd_exists" {
-  description = "Does the blob already exist in an existing Storage account"
-  type        = bool
-  default     = false
+variable "azure_image_storage_account_name" {
+  description = "Existing Storage Account Name for the VM Image"
+  type        = string
+  default     = ""
+}
+
+variable "azure_image_blob_uri" {
+  description = "The azure image blog uri for the vm vhd file. The vhd must be in the same subscription as the vm"
+  type        = string
+  default     = ""
+}
+
+variable "azure_image_container_name" {
+  description = "Azure Container name storing the VM Image vhd file"
+  type        = string
+  default     = ""
+}
+
+variable "azure_image_blob_name" {
+  description = "Azure blob which is the coreos vhd file"
+  type        = string
+  default     = ""
+}
+
+variable "azure_ignition_storage_rg" {
+  description = "Existing Storage Account Resource Group for the ignition files"
+  type        = string
+  default     = ""
+}
+
+variable "azure_ignition_storage_account_name" {
+  description = "Existing Storage Account Name for the ignition files"
+  type        = string
+  default     = ""
+}
+
+variable "azure_ignition_sas_container_name" {
+  description = "Azure Container name storing the ignition files"
+  type        = string
+  default     = ""
+}
+
+variable "azure_ignition_sas_token" {
+  description = "The SAS storage token string for the ignition files"
+  type        = string
+  default     = ""
+}
+
+variable "azure_bootlogs_storage_rg" {
+  description = "Existing Storage Account Resource Group for the boot diagnostic files"
+  type        = string
+  default     = ""
+}
+
+variable "azure_bootlogs_storage_account_name" {
+  description = "Existing Storage Account Name for the boot diagnostic files"
+  type        = string
+  default     = ""
+}
+
+variable "azure_bootlogs_sas_token" {
+  description = "The SAS storage token string for the boot diagnostic files"
+  type        = string
+  default     = ""
 }
 
 variable "phased_approach" {
@@ -393,40 +423,4 @@ variable "azure_worker_root_volume_type" {
   type        = string
   description = "The type of the volume the root block device of worker nodes."
   default     = "Premium_LRS"
-}
-
-variable "storage_account_sas" {
-  description = "Define if a SAS storage account is to be used"
-  type        = bool
-  default     = false
-}
-
-variable "azure_storage_blob_sas_uri" {
-  description = "The vhd image full sas uri if the image already exists"
-  type        = string
-  default     = ""
-}
-
-variable "azure_container_name_vhd" {
-  description = "Name of the container used for SAS storage for the vhd file"
-  type        = string
-  default     = ""
-}
-
-variable "azure_sas_token_vhd" {
-  description = "The SAS storage token string for the vhd file"
-  type        = string
-  default     = ""
-}
-
-variable "azure_container_name_ignition" {
-  description = "Name of the container used for SAS storage for the ignition files"
-  type        = string
-  default     = ""
-}
-
-variable "azure_sas_token_ignition" {
-  description = "The SAS storage token string for the ignition files"
-  type        = string
-  default     = ""
 }

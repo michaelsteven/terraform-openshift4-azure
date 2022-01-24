@@ -77,9 +77,15 @@ variable "tags" {
   description = "tags to be applied to created resources."
 }
 
-variable "storage_account" {
+variable "bootlogs_storage_account" {
   type        = any
   description = "the storage account for the cluster. It can be used for boot diagnostics."
+}
+
+variable "bootlogs_sas_token" {
+  description = "The SAS storage token string for the boot diagnostic files"
+  type        = string
+  default     = ""
 }
 
 variable "ignition" {

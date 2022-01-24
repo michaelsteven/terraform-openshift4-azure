@@ -1,17 +1,22 @@
-data "azurerm_storage_account" "ignition" {
-  count = !var.storage_account_sas ? 1 : 0
+resource "azurerm_storage_account" "ignition" {
+  count = var.storage_account_name == "" ? 1 : 0
 
-  name                     = var.storage_account_name
+  name                     = "ignition${var.cluster_name}${var.cluster_unique_string}"
   resource_group_name      = var.storage_resource_group
-#  location                 = var.azure_region
-#  account_tier             = "Standard"
-#  account_replication_type = "LRS"
+  location                 = var.azure_region
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+}
+
+data "azurerm_storage_account" "ignition" {
+  name                     = var.storage_account_name != "" ? var.storage_account_name : azurerm_storage_account.ignition[0].name
+  resource_group_name      = var.storage_resource_group
 }
 
 data "azurerm_storage_account_sas" "ignition" {
-  count = !var.storage_account_sas ? 1 : 0
+  count = var.ignition_sas_token == "" ? 1 : 0
 
-  connection_string = data.azurerm_storage_account.ignition[0].primary_connection_string
+  connection_string = data.azurerm_storage_account.ignition.primary_connection_string
   https_only        = true
 
   resource_types {
@@ -44,10 +49,10 @@ data "azurerm_storage_account_sas" "ignition" {
 }
 
 resource "azurerm_storage_container" "ignition" {
-  count = !var.storage_account_sas ? 1 : 0
+  count = var.ignition_sas_token == "" ? 1 : 0
 
-  name                  = "ignition${local.cluster_nr}"
-  storage_account_name  = data.azurerm_storage_account.ignition[0].name
+  name                  = "ignition-${var.cluster_id}"
+  storage_account_name  = data.azurerm_storage_account.ignition.name
   container_access_type = "private"
 }
 
@@ -55,7 +60,7 @@ locals {
   installer_workspace     = "${path.root}/installer-files/"
   openshift_installer_url = "${var.openshift_installer_url}/${var.openshift_version}/"
   cluster_nr              = join("", split("-", var.cluster_id))
-  ignition_base_uri       = "https://${var.storage_account_name}.blob.core.windows.net/${var.container_name_ignition}"
+  ignition_base_uri       = "https://${data.azurerm_storage_account.ignition.name}.blob.core.windows.net/${var.ignition_sas_container_name}"
 }
 
 resource "null_resource" "download_binaries" {
@@ -127,11 +132,11 @@ resource "null_resource" "generate_ignition" {
 }
 
 resource "azurerm_storage_blob" "ignition-bootstrap" {
-  count = !var.storage_account_sas ? 1 : 0
+  count = var.ignition_sas_token == "" ? 1 : 0
 
   name                   = "bootstrap.ign"
   source                 = "${local.installer_workspace}/bootstrap.ign"
-  storage_account_name   = data.azurerm_storage_account.ignition[0].name
+  storage_account_name   = data.azurerm_storage_account.ignition.name
   storage_container_name = azurerm_storage_container.ignition[0].name
   type                   = "Block"
   depends_on = [
@@ -140,11 +145,11 @@ resource "azurerm_storage_blob" "ignition-bootstrap" {
 }
 
 resource "null_resource" "ignition-bootstrap" {
-  count = var.storage_account_sas ? 1 : 0
+  count = var.ignition_sas_token != "" ? 1 : 0
 
   provisioner "local-exec" {
     command = <<EOF
-"${local.installer_workspace}azcopy" copy "${local.installer_workspace}bootstrap.ign" "${local.ignition_base_uri}/bootstrap.ign?${var.sas_token_ignition}"
+"${local.installer_workspace}azcopy" copy "${local.installer_workspace}bootstrap.ign" "${local.ignition_base_uri}/bootstrap.ign?${var.ignition_sas_token}"
 EOF
   }
 
@@ -154,11 +159,11 @@ EOF
 }
 
 resource "azurerm_storage_blob" "ignition-master" {
-  count = !var.storage_account_sas ? 1 : 0
+  count = var.ignition_sas_token == "" ? 1 : 0
 
   name                   = "master.ign"
   source                 = "${local.installer_workspace}/master.ign"
-  storage_account_name   = data.azurerm_storage_account.ignition[0].name
+  storage_account_name   = data.azurerm_storage_account.ignition.name
   storage_container_name = azurerm_storage_container.ignition[0].name
   type                   = "Block"
   depends_on = [
@@ -167,11 +172,11 @@ resource "azurerm_storage_blob" "ignition-master" {
 }
 
 resource "null_resource" "ignition-master" {
-  count = var.storage_account_sas ? 1 : 0
+  count = var.ignition_sas_token != "" ? 1 : 0
 
   provisioner "local-exec" {
     command = <<EOF
-"${local.installer_workspace}azcopy" copy "${local.installer_workspace}master.ign" "${local.ignition_base_uri}/master.ign?${var.sas_token_ignition}"
+"${local.installer_workspace}azcopy" copy "${local.installer_workspace}master.ign" "${local.ignition_base_uri}/master.ign?${var.ignition_sas_token}"
 EOF
   }
 
@@ -181,11 +186,11 @@ EOF
 }
 
 resource "azurerm_storage_blob" "ignition-worker" {
-  count = !var.storage_account_sas ? 1 : 0
+  count = var.ignition_sas_token == "" ? 1 : 0
 
   name                   = "worker.ign"
   source                 = "${local.installer_workspace}/worker.ign"
-  storage_account_name   = data.azurerm_storage_account.ignition[0].name
+  storage_account_name   = data.azurerm_storage_account.ignition.name
   storage_container_name = azurerm_storage_container.ignition[0].name
   type                   = "Block"
   depends_on = [
@@ -194,11 +199,11 @@ resource "azurerm_storage_blob" "ignition-worker" {
 }
 
 resource "null_resource" "ignition-worker" {
-  count = var.storage_account_sas ? 1 : 0
+  count = var.ignition_sas_token != "" ? 1 : 0
 
   provisioner "local-exec" {
     command = <<EOF
-"${local.installer_workspace}azcopy" copy "${local.installer_workspace}worker.ign" "${local.ignition_base_uri}/worker.ign?${var.sas_token_ignition}"
+"${local.installer_workspace}azcopy" copy "${local.installer_workspace}worker.ign" "${local.ignition_base_uri}/worker.ign?${var.ignition_sas_token}"
 EOF
   }
 
@@ -209,18 +214,18 @@ EOF
 
 data "ignition_config" "master_redirect" {
   replace {
-    source = var.storage_account_sas ? "${local.ignition_base_uri}/master.ign?${var.sas_token_ignition}" : "${azurerm_storage_blob.ignition-master[0].url}${data.azurerm_storage_account_sas.ignition[0].sas}"
+    source = var.ignition_sas_token != "" ? "${local.ignition_base_uri}/master.ign?${var.ignition_sas_token}" : "${azurerm_storage_blob.ignition-master[0].url}${data.azurerm_storage_account_sas.ignition[0].sas}"
   }
 }
 
 data "ignition_config" "bootstrap_redirect" {
   replace {
-    source = var.storage_account_sas ? "${local.ignition_base_uri}/bootstrap.ign?${var.sas_token_ignition}" : "${azurerm_storage_blob.ignition-bootstrap[0].url}${data.azurerm_storage_account_sas.ignition[0].sas}"
+    source = var.ignition_sas_token != "" ? "${local.ignition_base_uri}/bootstrap.ign?${var.ignition_sas_token}" : "${azurerm_storage_blob.ignition-bootstrap[0].url}${data.azurerm_storage_account_sas.ignition[0].sas}"
   }
 }
 
 data "ignition_config" "worker_redirect" {
   replace {
-    source = var.storage_account_sas ? "${local.ignition_base_uri}/worker.ign?${var.sas_token_ignition}" : "${azurerm_storage_blob.ignition-worker[0].url}${data.azurerm_storage_account_sas.ignition[0].sas}"
+    source = var.ignition_sas_token != "" ? "${local.ignition_base_uri}/worker.ign?${var.ignition_sas_token}" : "${azurerm_storage_blob.ignition-worker[0].url}${data.azurerm_storage_account_sas.ignition[0].sas}"
   }
 }

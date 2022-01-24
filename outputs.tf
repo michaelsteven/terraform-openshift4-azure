@@ -6,6 +6,10 @@ output "resource_group" {
   value = data.azurerm_resource_group.main.name
 }
 
+output "image_id" {
+  value = local.azure_image_id
+}
+
 output "bootstrap_public_ip" {
   value = module.bootstrap.bootstrap_public_ip
 }
