@@ -5,6 +5,7 @@ locals {
   // TODO: Azure machine provider probably needs to look for pipConfig-v6 as well (or a different name like pipConfig-secondary)
   ip_v6_configuration_name = "pipConfig-v6"
   identity_list = var.managed_infrastructure ? [var.identity] : []
+  bootlogs_base_uri                      = "https://${var.bootlogs_storage_account_name}.blob.core.windows.net/"
 }
 
 resource "azurerm_network_interface" "worker" {
@@ -125,6 +126,6 @@ resource "azurerm_linux_virtual_machine" "worker" {
   custom_data   = base64encode(var.ignition)
 
   boot_diagnostics {
-    storage_account_uri = var.storage_account.primary_blob_endpoint
+    storage_account_uri = var.bootlogs_sas_token != "" ? "${local.bootlogs_base_uri}?${var.bootlogs_sas_token}" : var.bootlogs_storage_account[0].primary_blob_endpoint
   }
 }

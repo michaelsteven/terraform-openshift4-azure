@@ -10,6 +10,12 @@ variable "cluster_name" {
   type = string
 }
 
+variable "cluster_unique_string" {
+  description = "Random generated unique cluster string"
+  type        = string
+  default     = ""
+}
+
 variable "cluster_network_cidr" {
   type = string
 }
@@ -192,20 +198,14 @@ variable "managed_infrastructure" {
   default     = true  
 }
 
-variable "storage_account_sas" {
-  description = "Define if a SAS storage account is to be used"
-  type        = bool
-  default     = false
-}
-
-variable "container_name_ignition" {
-  description = "Name of the container used for SAS storage for the ignition files"
+variable "ignition_sas_token" {
+  description = "The SAS storage token string for the ignition files"
   type        = string
   default     = ""
 }
 
-variable "sas_token_ignition" {
-  description = "The SAS storage token string for the ignition files"
+variable "ignition_sas_container_name" {
+  description = "Name of the container used for SAS storage for the ignition files"
   type        = string
   default     = ""
 }

@@ -9,6 +9,8 @@ case $(uname -s) in
     wget -r -l1 -np -nd -q ${installer_url} -P ${installer_workspace} -A 'openshift-client-mac-4*.tar.gz'
     tar zxvf ${installer_workspace}/openshift-client-mac-4*.tar.gz -C ${installer_workspace}
     wget https://github.com/stedolan/jq/releases/download/jq-1.6/jq-osx-amd64 -O ${installer_workspace}/jq > /dev/null 2>&1
+    curl -L https://aka.ms/downloadazcopy-v10-mac  -o ${installer_workspace}/downloadazcopy-v10-mac.zip
+    unzip -j -d ${installer_workspace} ${installer_workspace}/downloadazcopy-v10-mac.zip */azcopy
     ;;
   Linux)
     wget -r -l1 -np -nd -q ${installer_url}/openshift-install-linux-${openshift_version}.tar.gz -P ${installer_workspace} 
@@ -16,6 +18,8 @@ case $(uname -s) in
     wget -r -l1 -np -nd -q ${installer_url}/openshift-client-linux-${openshift_version}.tar.gz -P ${installer_workspace}
     tar zxvf ${installer_workspace}/openshift-client-linux-4*.tar.gz -C ${installer_workspace}
     wget https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 -O ${installer_workspace}/jq
+    curl -L https://aka.ms/downloadazcopy-v10-linux -o ${installer_workspace}/downloadazcopy-v10-linux
+    tar zxvf ${installer_workspace}/downloadazcopy-v10-linux -C ${installer_workspace} --wildcards *azcopy --strip-components 1
     ;;
   *)
     exit 1;;

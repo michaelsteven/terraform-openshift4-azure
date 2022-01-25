@@ -90,12 +90,19 @@ azure_storage_account_name        = "XXXX"
 | proxy_config                          | Configuration for Cluster wide proxy | [AirGapped](AIRGAPPED.md)| map |
 | openshift_ssh_key | Path to your own SSH Public Key.  If none provided it will create one for you | - | string |
 | openshift_additional_trust_bundle | Path to your trusted CA bundle in pem format | - | string |
-| storage_account_exists | Optionally use existing Storage Account. If `false` then vhd_exists should be `false` | `false` | bool 
-| azure_storage_rg | Optionally define existing Resource Group where Storage Account exists. Use with azure_storage_account_name | "" | string
-| azure_storage_account_name | Optionally define existing Storage Account name. Use with azure_storage_rg | "" | string
-| vhd_exists                            | Is VHD coreos file  already stored in existing storage accountfile | `false` | bool
-| azure_storage_container_name          | If `vhd_exists=true` then define the container where coreos image is stored | `null` | string
-| azure_storage_blob_name               | If `vhd_exists=true` then define the blob where coreos image is stored | `null` | string
+| azure_image_id | The azure image id for the coreos vm boot image | - | string |
+| azure_image_storage_rg | Existing Storage Account Resource Group for the VM Image | - | string |
+| azure_image_storage_account_name | Existing Storage Account Name for the VM Image | - | string |
+| azure_image_blob_uri | The azure image blog uri for the vm vhd file. The vhd must be in the same subscription as the vm | - | string |
+| azure_image_container_name | Azure Container name storing the VM Image vhd file | - | string |
+| azure_image_blob_name | Azure blob which is the coreos vhd file | - | string |
+| azure_ignition_storage_rg | Existing Storage Account Resource Group for the ignition files | - | string |
+| azure_ignition_storage_account_name | Existing Storage Account Name for the ignition files | - | string |
+| azure_ignition_sas_container_name | Azure Container name storing the ignition files | - | string |
+| azure_ignition_sas_token | The SAS storage token string for the ignition files | - | string |
+| azure_bootlogs_storage_rg | Existing Storage Account Resource Group for the boot diagnostic files | - | string |
+| azure_bootlogs_storage_account_name | Existing Storage Account Name for the boot diagnostic files | - | string |
+| azure_bootlogs_sas_token | The SAS storage token string for the boot diagnostic files | - | string |
 | phased_approach                       | If `phased_approach=true` then no machines are deployed. This allows user to get the generated load balancer IP to populate DNS entries before proceeding. This is not needed if using defining IP value for `api_and_api-int_dns_ip`. Note that if set to true then `phase1_complete` should be used as well.   | `false` | bool
 | phase1_complete        | Used with `phased_approach`. Set to true once DNS records are created | `false` | bool
 | api_and_api-int_dns_ip  | Used to define the front end IP of the Load Balancer created during install | `null` | string 
@@ -186,3 +193,20 @@ Replace XXX below with the DNS IP assigned for *.apps record set.
 ```bash
 oc patch svc router-default --patch '{"spec":{"loadBalancerIP":"XXX"}}' --type=merge -n openshift-ingress
 ```
+
+## Azure Red Hat CoreOS Image
+
+### Create Azure Image and Cleanup
+Prior to creating the cluster, create the azure image
+```
+terraform apply -target=module.image -auto-approve
+```
+Capture the image_id and hold onto it
+```
+terraform state rm module.image[0].azurerm_image.cluster
+terraform destroy -auto-approve
+```
+Populate the azure_image_id variable in the .tfvars file with the above image_id.
+
+Create the cluster by applying the full terraform
+
