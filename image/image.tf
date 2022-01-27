@@ -56,7 +56,7 @@ data "azurerm_storage_blob" "rhcos_image" {
 
 resource "azurerm_image" "cluster" {
   name                = var.cluster_id
-  resource_group_name = var.resource_group_name
+  resource_group_name = var.cluster_resource_group_name
   location            = var.region
 
   os_disk {

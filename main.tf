@@ -76,6 +76,7 @@ module "image" {
   cluster_name                      = var.cluster_name
   cluster_unique_string             = random_string.cluster_id.result
   cluster_id                        = local.cluster_id
+  cluster_resource_group_name       = data.azurerm_resource_group.main.name
   resource_group_name               = data.azurerm_resource_group.image_storage.name
   storage_account_name              = var.azure_image_storage_account_name
   region                            = var.azure_region
