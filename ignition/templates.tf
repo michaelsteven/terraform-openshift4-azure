@@ -343,7 +343,7 @@ EOF
 }
 
 data "template_file" "openshift-cluster-api_worker-machines" {
-  count    = !var.managed_infrastructure ? length(var.availability_zones) : 0
+  count    =  !var.managed_infrastructure ? var.node_count : 0
   template = <<EOF
 apiVersion: machine.openshift.io/v1beta1
 kind: Machine
@@ -408,7 +408,7 @@ resource "local_file" "openshift-cluster-api_worker-machineset" {
 }
 
 resource "local_file" "openshift-cluster-api_worker-machines" {
-  count    = !var.managed_infrastructure ? length(var.availability_zones) : 0
+  count    = !var.managed_infrastructure ? var.node_count : 0
   content  = element(data.template_file.openshift-cluster-api_worker-machines.*.rendered, count.index)
   filename = "${local.installer_workspace}/openshift/99_openshift-cluster-api_worker-machines-${count.index}.yaml"
   depends_on = [
@@ -489,7 +489,7 @@ EOF
 }
 
 data "template_file" "openshift-cluster-api_infra-machines" {
-  count    = !var.managed_infrastructure && var.infra_count > 0 ? length(var.availability_zones) : 0
+  count    = !var.managed_infrastructure && var.infra_count > 0 ? var.infra_count : 0
   template = <<EOF
 apiVersion: machine.openshift.io/v1beta1
 kind: Machine
@@ -556,7 +556,7 @@ resource "local_file" "openshift-cluster-api_infra-machineset" {
 }
 
 resource "local_file" "openshift-cluster-api_infra-machines" {
-  count    = !var.managed_infrastructure && var.infra_count > 0 ? length(var.availability_zones) : 0
+  count    = !var.managed_infrastructure && var.infra_count > 0 ? var.infra_count : 0
   content  = element(data.template_file.openshift-cluster-api_infra-machines.*.rendered, count.index)
   filename = "${local.installer_workspace}/openshift/99_openshift-cluster-api_infra-machines-${count.index}.yaml"
   depends_on = [
