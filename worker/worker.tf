@@ -140,7 +140,7 @@ resource "azurerm_managed_disk" "storage" {
   create_option        = "Empty"
   disk_size_gb         = var.infra_data_disk_size_GB
   zones                = [length(var.availability_zones) > 1 ? var.availability_zones[count.index % length(var.availability_zones)] : var.availability_zones[0]]
-  #[element(var.availability_zones, count.index)]
+  
 }
 
 resource "azurerm_virtual_machine_data_disk_attachment" "data_disk" {
