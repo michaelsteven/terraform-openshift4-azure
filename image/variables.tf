@@ -26,7 +26,7 @@ variable "cluster_resource_group_name" {
   type = string
 }
 
-variable "resource_group_name" {
+variable "storage_resource_group_name" {
   type = string
 }
 
