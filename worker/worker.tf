@@ -129,3 +129,25 @@ resource "azurerm_linux_virtual_machine" "worker" {
     storage_account_uri = var.bootlogs_sas_token != "" ? "${local.bootlogs_base_uri}?${var.bootlogs_sas_token}" : var.bootlogs_storage_account[0].primary_blob_endpoint
   }
 }
+
+resource "azurerm_managed_disk" "storage" {
+  count = var.infra_data_disk_size_GB>0 ? var.instance_count : 0
+
+  name                 = "${var.cluster_id}-infra-${count.index}-data-disk"
+  location             = var.region
+  resource_group_name  = var.resource_group_name
+  storage_account_type = "Standard_LRS"
+  create_option        = "Empty"
+  disk_size_gb         = var.infra_data_disk_size_GB
+  zones                = [length(var.availability_zones) > 1 ? var.availability_zones[count.index % length(var.availability_zones)] : var.availability_zones[0]]
+  #[element(var.availability_zones, count.index)]
+}
+
+resource "azurerm_virtual_machine_data_disk_attachment" "data_disk" {
+  count = var.infra_data_disk_size_GB>0 ? var.instance_count : 0
+
+  managed_disk_id    = azurerm_managed_disk.storage[count.index].id
+  virtual_machine_id = azurerm_linux_virtual_machine.worker[count.index].id
+  lun                = "10"
+  caching            = "ReadWrite"
+}

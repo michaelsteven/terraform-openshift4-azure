@@ -159,3 +159,9 @@ variable "node_role" {
   type        = string
   default     = "worker"
 }
+
+variable "infra_data_disk_size_GB" {
+  type          = string
+  description   = "Size of data disk for infra nodes" 
+  default       = 0
+}

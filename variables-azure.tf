@@ -424,3 +424,9 @@ variable "azure_worker_root_volume_type" {
   description = "The type of the volume the root block device of worker nodes."
   default     = "Premium_LRS"
 }
+
+variable "infra_data_disk_size_GB" {
+  type          = string
+  description   = "Size of data disk for infra nodes" 
+  default       = 0
+}

@@ -258,6 +258,7 @@ module "infra" {
   phased_approach           = var.phased_approach 
   phase1_complete           = var.phase1_complete
   managed_infrastructure    = var.openshift_managed_infrastructure
+  infra_data_disk_size_GB   = var.infra_data_disk_size_GB
 
   depends_on = [module.master]
 }
