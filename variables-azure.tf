@@ -430,3 +430,21 @@ variable "infra_data_disk_size_GB" {
   description   = "Size of data disk for infra nodes" 
   default       = 0
 }
+
+variable "azure_shared_image" {
+  type        = bool
+  description = "Identitify if the coreos image should be stored in a repository"
+  default     = false
+}
+
+variable "azure_shared_image_repo_name" {
+  type        = string
+  description = "The name of the existing repository if one is being used"
+  default     = ""
+}
+
+variable "azure_shared_image_name" {
+  type        = string
+  description = "The name of the existing image stored in an existing repository"
+  default     = ""
+}

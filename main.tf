@@ -64,12 +64,12 @@ locals {
   public_ssh_key                      = var.openshift_ssh_key == "" ? tls_private_key.installkey[0].public_key_openssh : file(var.openshift_ssh_key)
   major_version                       = join(".", slice(split(".", var.openshift_version), 0, 2))
   installer_workspace                 = "${path.root}/installer-files/"
-  azure_image_id                      = var.azure_image_id != "" ? var.azure_image_id : module.image[0].image_cluster_id
+  azure_image_id                      = var.azure_image_id != "" ? var.azure_image_id : (var.azure_shared_image ? module.shared_image[0].shared_image_id : module.image[0].image_cluster_id)
   azure_bootlogs_storage_account_name = var.azure_bootlogs_sas_token != "" ? var.azure_bootlogs_storage_account_name : data.azurerm_storage_account.bootlogs[0].name
 }
 
 module "image" {
-  count                             = var.azure_image_id == "" ? 1 : 0
+  count                             = !var.azure_shared_image && var.azure_image_id == "" ? 1 : 0
   source                            = "./image"
   
   openshift_version                 = var.openshift_version
@@ -83,6 +83,19 @@ module "image" {
   image_blob_uri                    = var.azure_image_blob_uri
   image_container_name              = var.azure_image_container_name
   image_blob_name                   = var.azure_image_blob_name
+}
+
+module "shared_image" {
+  count                             = var.azure_shared_image && var.azure_image_id == "" ? 1 : 0
+  source                            = "./shared_image"
+  
+  openshift_version                 = var.openshift_version
+  cluster_name                      = var.cluster_name
+  cluster_unique_string             = random_string.cluster_id.result
+  cluster_resource_group_name       = data.azurerm_resource_group.main.name
+  region                            = var.azure_region
+  shared_image_repo_name            = var.azure_shared_image_repo_name
+  shared_image_name                 = var.azure_shared_image_name
 }
 
 module "vnet" {
@@ -376,7 +389,7 @@ resource "azurerm_role_assignment" "network" {
   role_definition_id = (var.azure_role_id_network == "") ? data.azurerm_role_definition.contributor.id : var.azure_role_id_network
   principal_id         = azurerm_user_assigned_identity.main[0].principal_id
 }
-/*
+
 resource "null_resource" "delete_bootstrap" {
   count = !var.phased_approach || (var.phased_approach && var.phase1_complete) ? 1 : 0
 
@@ -405,4 +418,3 @@ fi
 EOF     
   }
 }
-*/
