@@ -3,9 +3,9 @@
 This [terraform](terraform.io) implementation will deploy OpenShift 4.x into an Azure VNET, with two subnets for controlplane and worker nodes.  Traffic to the master nodes is handled via a pair of loadbalancers, one for internal traffic and another for external API traffic.  Application loadbalancing is handled by a third loadbalancer that talks to the router pods on the infra nodes.  Worker, Infra and Master nodes are deployed across 3 Availability Zones. 
 
 ** Note that this version will implement the following custom scenario:
-1. leverage an existing Azure Storage Account for coreos vhd, boot logs, and installer ignition files
-2. If needed, leverage existing DNS with predefined record sets for api, api-int, and *.app
-- Record the value of the IP assigned to api and api-int. These are the same and reference the front end ip of the loadbalancer. Then define `api_and_api-int_dns_ip`
+1. Optionally leverage an existing Azure Storage Account for coreos vhd, boot logs, and installer ignition files
+2. If needed, predefine IP values to be used for the load balancer using `api_and_api-int_dns_ip` and `apps_dns_ip`. This will allow you to precreate the DNS record sets before install
+3. Allow for the assignment of Azure Custom Roles for network and cluster resource groups using `azure_role_id_cluster` and `azure_role_id_network`
 
 ![Topology](./media/topology.svg)
 
