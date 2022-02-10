@@ -14,7 +14,7 @@ resource "azurerm_storage_account" "image" {
   count = var.storage_account_name == "" ? 1 : 0
 
   name                     = "image${var.cluster_name}${var.cluster_unique_string}"
-  resource_group_name      = var.resource_group_name
+  resource_group_name      = var.storage_resource_group_name
   location                 = var.region
   account_tier             = "Standard"
   account_replication_type = "LRS"
@@ -22,7 +22,7 @@ resource "azurerm_storage_account" "image" {
 
 data "azurerm_storage_account" "image" {
   name                     = var.storage_account_name != "" ? var.storage_account_name : azurerm_storage_account.image[0].name
-  resource_group_name      = var.resource_group_name
+  resource_group_name      = var.storage_resource_group_name
 }
 
 resource "azurerm_storage_container" "vhd" {

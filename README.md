@@ -91,6 +91,9 @@ azure_storage_account_name        = "XXXX"
 | openshift_ssh_key | Path to your own SSH Public Key.  If none provided it will create one for you | - | string |
 | openshift_additional_trust_bundle | Path to your trusted CA bundle in pem format | - | string |
 | azure_image_id | The azure image id for the coreos vm boot image | - | string |
+| azure_shared_image                    | Should the coreos image be stored in a repository | false | bool |
+| azure_shared_image_repo_name          | If a repository is being used for the image, the name of the repository | - | string |
+| azure_shared_image_name               | If a repository is being used for the image, The name of the existing image | - | string |
 | azure_image_storage_rg | Existing Storage Account Resource Group for the VM Image | - | string |
 | azure_image_storage_account_name | Existing Storage Account Name for the VM Image | - | string |
 | azure_image_blob_uri | The azure image blog uri for the vm vhd file. The vhd must be in the same subscription as the vm | - | string |
