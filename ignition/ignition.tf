@@ -214,6 +214,60 @@ EOF
   ]
 }
 
+resource "azurerm_storage_blob" "auth-kubeconfig" {
+  count = var.ignition_sas_token == "" ? 1 : 0
+
+  name                   = "kubeconfig"
+  source                 = "${local.installer_workspace}/auth/kubeconfig"
+  storage_account_name   = data.azurerm_storage_account.ignition[0].name
+  storage_container_name = azurerm_storage_container.ignition[0].name
+  type                   = "Block"
+  depends_on = [
+    null_resource.generate_ignition
+  ]
+}
+
+resource "null_resource" "auth-kubeconfig" {
+  count = var.ignition_sas_token != "" ? 1 : 0
+
+  provisioner "local-exec" {
+    command = <<EOF
+"${local.installer_workspace}azcopy" copy "${local.installer_workspace}auth/kubeconfig" "${local.ignition_base_uri}/kubeconfig?${var.ignition_sas_token}"
+EOF
+  }
+
+  depends_on = [
+    null_resource.generate_ignition
+  ]
+}
+
+resource "azurerm_storage_blob" "auth-kubeadmin" {
+  count = var.ignition_sas_token == "" ? 1 : 0
+
+  name                   = "kubeadmin-password"
+  source                 = "${local.installer_workspace}/auth/kubeadmin-password"
+  storage_account_name   = data.azurerm_storage_account.ignition[0].name
+  storage_container_name = azurerm_storage_container.ignition[0].name
+  type                   = "Block"
+  depends_on = [
+    null_resource.generate_ignition
+  ]
+}
+
+resource "null_resource" "auth-kubeadmin" {
+  count = var.ignition_sas_token != "" ? 1 : 0
+
+  provisioner "local-exec" {
+    command = <<EOF
+"${local.installer_workspace}azcopy" copy "${local.installer_workspace}auth/kubeadmin-password" "${local.ignition_base_uri}/kubeadmin-password?${var.ignition_sas_token}"
+EOF
+  }
+
+  depends_on = [
+    null_resource.generate_ignition
+  ]
+}
+
 data "ignition_config" "master_redirect" {
   replace {
     source = var.ignition_sas_token != "" ? "${local.ignition_base_uri}/master.ign?${var.ignition_sas_token}" : "${azurerm_storage_blob.ignition-master[0].url}${data.azurerm_storage_account_sas.ignition[0].sas}"
