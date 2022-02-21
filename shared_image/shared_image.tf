@@ -12,43 +12,6 @@ data "http" "images" {
   }
 }
 
-resource "azurerm_shared_image_gallery" "gallery" {
-  count = var.shared_image_repo_name == "" ? 1 : 0
-
-  name                = "rhcos_${var.cluster_name}_${var.cluster_unique_string}_repo"
-  resource_group_name = var.cluster_resource_group_name
-  location            = var.region
-  description         = "RHCOS Image"
-}
-
-data "azurerm_shared_image_gallery" "gallery" {
-  name                = var.shared_image_repo_name != "" ? var.shared_image_repo_name : azurerm_shared_image_gallery.gallery[0].name
-  resource_group_name = var.cluster_resource_group_name
-}
-
-resource "azurerm_shared_image" "coreos" {
-  count = var.shared_image_name == "" ? 1 : 0
-
-  name                = "coreos"
-  gallery_name        = data.azurerm_shared_image_gallery.gallery.name
-  resource_group_name = var.cluster_resource_group_name
-  location            = var.region
-  os_type             = "Linux"
-  specialized         = false
-  hyper_v_generation  = "V1"
-  identifier {
-    publisher = "redhat"
-    offer     = "rhcos"
-    sku       = "coreos"
-  }
-}
-
-data "azurerm_shared_image" "coreos" {
-  name                = var.shared_image_name != "" ? var.shared_image_name : azurerm_shared_image.coreos[0].name
-  gallery_name        = data.azurerm_shared_image_gallery.gallery.name
-  resource_group_name = var.cluster_resource_group_name
-}
-
 resource "null_resource" "download_binaries" {
   provisioner "local-exec" {
     when = create
@@ -73,14 +36,14 @@ resource "null_resource" "rhcos_disk" {
   provisioner "local-exec" {
     when = create
     command = <<EOF
-  az disk create -n "coreos-${var.openshift_version}-vhd" -g "${var.cluster_resource_group_name}" -l "${var.region}" --os-type Linux --for-upload --upload-size-bytes $(curl -sI ${local.rhcos_image} | grep -i Content-Length | awk '{print $2}') --sku standard_lrs
+    az disk create -n "coreos-${var.openshift_version}-vhd" -g "${var.cluster_resource_group_name}" -l "${var.region}" --os-type Linux --for-upload --upload-size-bytes $(curl -sI ${local.rhcos_image} | grep -i Content-Length | awk '{print $2}') --sku standard_lrs
   EOF
   }
 
   provisioner "local-exec" {
     when    = destroy
     command = <<EOF
-  az disk delete -n "coreos-${self.triggers.openshift_version}-vhd" -g "${self.triggers.cluster_resource_group_name}" -y
+    az disk delete -n "coreos-${self.triggers.openshift_version}-vhd" -g "${self.triggers.cluster_resource_group_name}" -y
   EOF
   }  
 
@@ -125,7 +88,7 @@ resource "null_resource" "rhcos_disk_revoke" {
   provisioner "local-exec" {
     when = create
     command = <<EOF
-  az disk revoke-access -n "coreos-${var.openshift_version}-vhd" -g "${var.cluster_resource_group_name}"
+    az disk revoke-access -n "coreos-${var.openshift_version}-vhd" -g "${var.cluster_resource_group_name}"
   EOF
   }
   depends_on = [
@@ -133,20 +96,19 @@ resource "null_resource" "rhcos_disk_revoke" {
   ]
 }
 
-resource "azurerm_shared_image_version" "image" {
-  name                = var.openshift_version
-  gallery_name        = data.azurerm_shared_image.coreos.gallery_name
-  image_name          = data.azurerm_shared_image.coreos.name
-  resource_group_name = data.azurerm_shared_image.coreos.resource_group_name
-  location            = data.azurerm_shared_image.coreos.location
-  os_disk_snapshot_id = data.azurerm_managed_disk.rhcos_disk.id
-  target_region {
-    name                   = var.region
-    regional_replica_count = 1
-    storage_account_type   = "Standard_LRS"
+resource "azurerm_image" "cluster" {
+  name                = "${var.cluster_name}_${var.cluster_unique_string}_image"
+  resource_group_name = var.cluster_resource_group_name
+  location            = var.region
+
+  os_disk {
+    os_type  = "Linux"
+    os_state = "Generalized"
+    managed_disk_id = data.azurerm_managed_disk.rhcos_disk.id
+#    blob_uri = var.image_blob_uri != "" ? var.image_blob_uri : data.azurerm_storage_blob.rhcos_image.url
   }
 
-  depends_on = [
+    depends_on = [
     null_resource.rhcos_disk_revoke
   ]  
 }
