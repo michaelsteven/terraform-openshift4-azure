@@ -105,7 +105,6 @@ resource "azurerm_image" "cluster" {
     os_type  = "Linux"
     os_state = "Generalized"
     managed_disk_id = data.azurerm_managed_disk.rhcos_disk.id
-#    blob_uri = var.image_blob_uri != "" ? var.image_blob_uri : data.azurerm_storage_blob.rhcos_image.url
   }
 
     depends_on = [
