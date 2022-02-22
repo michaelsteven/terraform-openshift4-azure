@@ -1,6 +1,6 @@
 #!/bin/bash
 
-eval "$(jq -r '@sh "export INSTALLER_WORKSPACE=\(.installer_workspace) OPENSHIFT_VERSION=\(.openshift_version) RESOURCE_GROUP_NAME=\(.resource_group_name)"')"
+eval "$(./jq -r '@sh "export OPENSHIFT_VERSION=\(.openshift_version) RESOURCE_GROUP_NAME=\(.resource_group_name)"')"
 
 DISK_STATE=$(az disk show -n "coreos-${OPENSHIFT_VERSION}-vhd" -g "${RESOURCE_GROUP_NAME}" --query diskState | tr -d '"')
 

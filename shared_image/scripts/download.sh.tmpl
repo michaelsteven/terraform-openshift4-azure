@@ -7,16 +7,15 @@ case $(uname -s) in
     wget https://github.com/stedolan/jq/releases/download/jq-1.6/jq-osx-amd64 -O ${installer_workspace}/jq > /dev/null 2>&1
     curl -L https://aka.ms/downloadazcopy-v10-mac  -o ${installer_workspace}/downloadazcopy-v10-mac.zip
     unzip -j -d ${installer_workspace} ${installer_workspace}/downloadazcopy-v10-mac.zip */azcopy
-    export PATH=$PATH:${installer_workspace}
     ;;
   Linux)
     wget https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 -O ${installer_workspace}/jq
     curl -L https://aka.ms/downloadazcopy-v10-linux -o ${installer_workspace}/downloadazcopy-v10-linux
     tar zxvf ${installer_workspace}downloadazcopy-v10-linux -C ${installer_workspace} --wildcards *azcopy --strip-components 1
-    export PATH=$PATH:${installer_workspace}
     ;;
   *)
     exit 1;;
 esac
 chmod u+x ${installer_workspace}jq
+chmod u+x ${installer_workspace}azcopy
 rm -f ${installer_workspace}*.tar.gz ${installer_workspace}robots*.txt* ${installer_workspace}README.md

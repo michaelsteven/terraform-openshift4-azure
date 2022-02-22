@@ -98,9 +98,9 @@ data "azurerm_managed_disk" "rhcos_disk" {
 }
 
 data "external" "rhcos_disk_sas" {
-  program = ["bash","${path.module}/scripts/get_disk_sas.sh"]
+  program = ["bash","${path.cwd}/${path.module}/scripts/get_disk_sas.sh"]
+  working_dir = local.installer_workspace
   query = {
-    installer_workspace = local.installer_workspace
     openshift_version = var.openshift_version
     resource_group_name = var.cluster_resource_group_name
   }
