@@ -1,6 +1,6 @@
 # OpenShift 4 UPI on Azure Cloud
 
-### *It is the primary intent of this branch to cover the scenario where the cluster will be fully provisioned using terraform during install time. It is a UPI implementation where cluster self-management capabilites are removed*
+### *It is the primary intent of this branch to cover the scenario where the cluster will be fully provisioned using terraform during install time. It is a UPI implementation without cluster infrastructure management capabilites*
 
 
 This [terraform](terraform.io) implementation will deploy OpenShift 4.x into an Azure VNET, with two subnets for controlplane and worker nodes.  Traffic to the master nodes is handled via a pair of loadbalancers, one for internal traffic and another for external API traffic.  Application loadbalancing is handled by a third loadbalancer that talks to the router pods on the infra nodes.  Worker, Infra and Master nodes are deployed across 3 Availability Zones. 
