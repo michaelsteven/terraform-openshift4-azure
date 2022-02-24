@@ -90,6 +90,10 @@ module "shared_image" {
   source                            = "./shared_image"
   
   openshift_version                 = var.openshift_version
+  subscription_id                   = var.azure_subscription_id
+  tenant_id                         = var.azure_tenant_id
+  client_id                         = var.azure_client_id
+  client_secret                     = var.azure_client_secret
   cluster_name                      = var.cluster_name
   cluster_unique_string             = random_string.cluster_id.result
   cluster_resource_group_name       = data.azurerm_resource_group.main.name

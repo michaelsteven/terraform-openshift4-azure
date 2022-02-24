@@ -25,7 +25,7 @@ resource "null_resource" "download_binaries" {
     command = "rm -rf ./installer-files"
   }
 }
-
+/*
 resource "null_resource" "rhcos_disk" {
   triggers = {
     installer_workspace = local.installer_workspace
@@ -51,24 +51,45 @@ resource "null_resource" "rhcos_disk" {
     null_resource.download_binaries
   ]
 }
+*/
 
-data "azurerm_managed_disk" "rhcos_disk" {
-  name                = "coreos-${var.openshift_version}-vhd"
-  resource_group_name = var.cluster_resource_group_name
+data "external" "get_token" {
+  program = ["bash","${path.cwd}/${path.module}/scripts/get_token.sh"]
+  working_dir = local.installer_workspace
+  query = {
+    tenant_id     = var.tenant_id
+    client_id     = var.client_id
+    client_secret = var.client_secret
+  }
   depends_on = [
-    null_resource.rhcos_disk
+    null_resource.download_binaries
   ]
+}
+
+data "external" "disk_create" {
+  program = ["bash","${path.cwd}/${path.module}/scripts/disk_create.sh"]
+  working_dir = local.installer_workspace
+  query = {
+    bearer_token = data.external.get_token.result.access_token
+    openshift_version = var.openshift_version
+    subscription_id = var.subscription_id
+    resource_group_name = var.cluster_resource_group_name
+    region = var.region
+    rhcos_image_url = local.rhcos_image
+  }
 }
 
 data "external" "rhcos_disk_sas" {
   program = ["bash","${path.cwd}/${path.module}/scripts/get_disk_sas.sh"]
   working_dir = local.installer_workspace
   query = {
+    bearer_token = data.external.get_token.result.access_token
     openshift_version = var.openshift_version
+    subscription_id = var.subscription_id
     resource_group_name = var.cluster_resource_group_name
   }
   depends_on = [
-    null_resource.rhcos_disk
+    data.external.disk_create
   ]
 }
 
@@ -84,16 +105,23 @@ resource "null_resource" "rhcos_disk_copy" {
   ]
 }
 
-resource "null_resource" "rhcos_disk_revoke" {
-  provisioner "local-exec" {
-    when = create
-    command = <<EOF
-    az disk revoke-access -n "coreos-${var.openshift_version}-vhd" -g "${var.cluster_resource_group_name}"
-  EOF
+data "external" "rhcos_disk_revoke" {
+  program = ["bash","${path.cwd}/${path.module}/scripts/revoke_disk_access.sh"]
+  working_dir = local.installer_workspace
+  query = {
+    bearer_token = data.external.get_token.result.access_token
+    openshift_version = var.openshift_version
+    subscription_id = var.subscription_id
+    resource_group_name = var.cluster_resource_group_name
   }
   depends_on = [
     null_resource.rhcos_disk_copy
   ]
+}
+
+data "azurerm_managed_disk" "rhcos_disk" {
+  name                = data.external.disk_create.result.disk_name
+  resource_group_name = var.cluster_resource_group_name
 }
 
 resource "azurerm_image" "cluster" {
@@ -107,7 +135,7 @@ resource "azurerm_image" "cluster" {
     managed_disk_id = data.azurerm_managed_disk.rhcos_disk.id
   }
 
-    depends_on = [
-    null_resource.rhcos_disk_revoke
+  depends_on = [
+    data.external.rhcos_disk_revoke
   ]  
 }
