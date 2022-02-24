@@ -128,7 +128,7 @@ module "vnet" {
 
 module "ignition" {
   source                        = "./ignition"
-  depends_on                    = [module.image, local_file.azure_sp_json]
+  depends_on                    = [module.image, module.shared_image, local_file.azure_sp_json]
   base_domain                   = var.base_domain
   openshift_version             = var.openshift_version
   master_count                  = var.master_count
@@ -393,7 +393,7 @@ resource "azurerm_role_assignment" "network" {
   role_definition_id = (var.azure_role_id_network == "") ? data.azurerm_role_definition.contributor.id : var.azure_role_id_network
   principal_id         = azurerm_user_assigned_identity.main[0].principal_id
 }
-
+/* 
 resource "null_resource" "delete_bootstrap" {
   count = !var.phased_approach || (var.phased_approach && var.phase1_complete) ? 1 : 0
 
@@ -422,3 +422,4 @@ fi
 EOF     
   }
 }
+ */
