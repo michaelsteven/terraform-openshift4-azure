@@ -13,6 +13,23 @@ resource "random_string" "cluster_id" {
   upper   = false
 }
 
+resource "null_resource" "installer_workspace" {
+  triggers = {
+    installer_workspace   = local.installer_workspace
+  }
+
+  provisioner "local-exec" {
+    when = create
+    command = "test -e ${self.triggers.installer_workspace} || mkdir -p ${self.triggers.installer_workspace}"
+  }
+
+  provisioner "local-exec" {
+    when    = destroy
+    command = "rm -rf ${self.triggers.installer_workspace}"
+  }
+
+}
+
 # SSH Key for VMs
 resource "tls_private_key" "installkey" {
   count     = var.openshift_ssh_key == "" ? 1 : 0
@@ -88,7 +105,8 @@ module "image" {
 module "shared_image" {
   count                             = var.azure_shared_image && var.azure_image_id == "" ? 1 : 0
   source                            = "./shared_image"
-  
+  depends_on                        = [null_resource.installer_workspace]
+
   openshift_version                 = var.openshift_version
   subscription_id                   = var.azure_subscription_id
   tenant_id                         = var.azure_tenant_id
@@ -100,6 +118,7 @@ module "shared_image" {
   region                            = var.azure_region
   shared_image_repo_name            = var.azure_shared_image_repo_name
   shared_image_name                 = var.azure_shared_image_name
+  installer_workspace               = null_resource.installer_workspace.triggers.installer_workspace
 }
 
 module "vnet" {

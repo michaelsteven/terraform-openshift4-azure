@@ -54,3 +54,9 @@ variable "shared_image_name" {
   description = "The name of the existing image stored in an existing repository"
   default     = ""
 }
+
+variable "installer_workspace" {
+  type        = string
+  description = "The working directory used to hold temporary files during installation"
+  default     = ""
+}

@@ -2,13 +2,56 @@ locals {
   major_version          = join(".", slice(split(".", var.openshift_version), 0, 2))
   rhcos_image            = lookup(lookup(jsondecode(data.http.images.body), "azure"), "url")
   installer_workspace    = "${path.root}/installer-files/"
-
 }
 
 data "http" "images" {
   url = "https://raw.githubusercontent.com/openshift/installer/release-${local.major_version}/data/data/rhcos.json"
   request_headers = {
     Accept = "application/json"
+  }
+}
+
+resource "null_resource" "disk_create" {
+  triggers = {
+    installer_workspace   = var.installer_workspace
+    subscription_id       = var.subscription_id
+    tenant_id             = var.tenant_id
+    client_id             = var.client_id
+    client_secret         = var.client_secret
+    resource_group_name   = var.cluster_resource_group_name
+    openshift_version     = var.openshift_version
+  }
+
+  provisioner "local-exec" {
+    when = create
+    command = "${path.module}/scripts/disk_create.sh"
+    interpreter = ["/bin/bash", "-x"]
+    environment = {
+      INSTALLER_WORKSPACE = self.triggers.installer_workspace
+      SUBSCRIPTION_ID     = self.triggers.subscription_id
+      TENANT_ID           = self.triggers.tenant_id
+      CLIENT_ID           = self.triggers.client_id
+      CLIENT_SECRET       = self.triggers.client_secret
+      RESOURCE_GROUP_NAME = self.triggers.resource_group_name
+      OPENSHIFT_VERSION   = self.triggers.openshift_version
+      REGION              = var.region
+      RHCOS_IMAGE_URL     = local.rhcos_image
+    }
+  }
+
+  provisioner "local-exec" {
+    when    = destroy
+    command = "${path.module}/scripts/disk_delete.sh"
+    interpreter = ["/bin/bash", "-x"]
+    environment = {
+      INSTALLER_WORKSPACE = self.triggers.installer_workspace
+      SUBSCRIPTION_ID     = self.triggers.subscription_id
+      TENANT_ID           = self.triggers.tenant_id
+      CLIENT_ID           = self.triggers.client_id
+      CLIENT_SECRET       = self.triggers.client_secret
+      RESOURCE_GROUP_NAME = self.triggers.resource_group_name
+      OPENSHIFT_VERSION   = self.triggers.openshift_version
+    }
   }
 }
 
@@ -19,39 +62,10 @@ resource "null_resource" "download_binaries" {
       installer_workspace  = local.installer_workspace
     })
   }
-
-  provisioner "local-exec" {
-    when    = destroy
-    command = "rm -rf ./installer-files"
-  }
-}
-/*
-resource "null_resource" "rhcos_disk" {
-  triggers = {
-    installer_workspace = local.installer_workspace
-    openshift_version = var.openshift_version
-    cluster_resource_group_name = var.cluster_resource_group_name
-  }
-
-  provisioner "local-exec" {
-    when = create
-    command = <<EOF
-    az disk create -n "coreos-${var.openshift_version}-vhd" -g "${var.cluster_resource_group_name}" -l "${var.region}" --os-type Linux --for-upload --upload-size-bytes $(curl -sI ${local.rhcos_image} | grep -i Content-Length | awk '{print $2}') --sku standard_lrs
-  EOF
-  }
-
-  provisioner "local-exec" {
-    when    = destroy
-    command = <<EOF
-    az disk delete -n "coreos-${self.triggers.openshift_version}-vhd" -g "${self.triggers.cluster_resource_group_name}" -y
-  EOF
-  }  
-
   depends_on = [
-    null_resource.download_binaries
+    null_resource.disk_create
   ]
 }
-*/
 
 data "external" "get_token" {
   program = ["bash","${path.cwd}/${path.module}/scripts/get_token.sh"]
@@ -66,19 +80,6 @@ data "external" "get_token" {
   ]
 }
 
-data "external" "disk_create" {
-  program = ["bash","${path.cwd}/${path.module}/scripts/disk_create.sh"]
-  working_dir = local.installer_workspace
-  query = {
-    bearer_token = data.external.get_token.result.access_token
-    openshift_version = var.openshift_version
-    subscription_id = var.subscription_id
-    resource_group_name = var.cluster_resource_group_name
-    region = var.region
-    rhcos_image_url = local.rhcos_image
-  }
-}
-
 data "external" "rhcos_disk_sas" {
   program = ["bash","${path.cwd}/${path.module}/scripts/get_disk_sas.sh"]
   working_dir = local.installer_workspace
@@ -89,7 +90,7 @@ data "external" "rhcos_disk_sas" {
     resource_group_name = var.cluster_resource_group_name
   }
   depends_on = [
-    data.external.disk_create
+    data.external.get_token
   ]
 }
 
@@ -120,8 +121,11 @@ data "external" "rhcos_disk_revoke" {
 }
 
 data "azurerm_managed_disk" "rhcos_disk" {
-  name                = data.external.disk_create.result.disk_name
+  name                = "coreos-${var.openshift_version}-vhd"
   resource_group_name = var.cluster_resource_group_name
+  depends_on = [
+    null_resource.disk_create
+  ]  
 }
 
 resource "azurerm_image" "cluster" {
