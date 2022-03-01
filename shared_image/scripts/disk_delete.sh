@@ -6,9 +6,11 @@ function install_deps() {
   if [[ ! -f ${INSTALLER_WORKSPACE}jq ]]; then 
     case $(uname -s) in
     Darwin)
+      mkdir -p ${INSTALLER_WORKSPACE}        
       wget https://github.com/stedolan/jq/releases/download/jq-1.6/jq-osx-amd64 -O ${INSTALLER_WORKSPACE}jq > /dev/null 2>&1
       ;;
     Linux)
+      mkdir -p ${INSTALLER_WORKSPACE}    
       wget https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 -O ${INSTALLER_WORKSPACE}jq > /dev/null 2>&1
       ;;
     *)
