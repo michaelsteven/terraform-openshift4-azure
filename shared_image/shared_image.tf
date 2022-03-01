@@ -67,6 +67,28 @@ resource "null_resource" "download_binaries" {
   ]
 }
 
+resource "null_resource" "debug" {
+  provisioner "local-exec" {
+    when = create
+    command = <<EOF
+  echo DEBUG ####### 
+  echo tenant_id=${var.tenant_id} 
+  echo client_id=${var.client_id} 
+  echo client_secret=${var.client_secret}  
+  echo openshift_version = ${var.openshift_version} 
+  echo subscription_id = ${var.subscription_id} 
+  echo resource_group_name = ${var.cluster_resource_group_name} 
+  echo region = ${var.region} 
+  echo rhcos_image_url = ${local.rhcos_image}  
+  echo bearer_token = ${data.external.get_token.result.access_token} 
+  echo #######
+  EOF
+  }
+  depends_on = [
+    data.external.get_token
+  ]
+}
+
 data "external" "get_token" {
   program = ["bash","${path.cwd}/${path.module}/scripts/get_token.sh"]
   working_dir = local.installer_workspace
