@@ -1,6 +1,6 @@
 # OpenShift 4 UPI on Azure Cloud
 
-### *It is the primary intent of this branch to cover the scenario where the cluster will be fully provisioned using terraform during install time. It is a UPI implementation where cluster self-management capabilites are removed*
+### *It is the primary intent of this branch to cover the scenario where the cluster will be fully provisioned using terraform during install time. It is a UPI implementation without cluster infrastructure management capabilites*
 
 
 This [terraform](terraform.io) implementation will deploy OpenShift 4.x into an Azure VNET, with two subnets for controlplane and worker nodes.  Traffic to the master nodes is handled via a pair of loadbalancers, one for internal traffic and another for external API traffic.  Application loadbalancing is handled by a third loadbalancer that talks to the router pods on the infra nodes.  Worker, Infra and Master nodes are deployed across 3 Availability Zones. 
@@ -91,7 +91,7 @@ azure_storage_account_name        = "XXXX"
 | use_ipv4                              | This determines wether your cluster will use IPv4 networking | true | bool |
 | use_ipv6                              | This determines wether your cluster will use IPv6 networking | false | bool |
 | proxy_config                          | Configuration for Cluster wide proxy | [AirGapped](AIRGAPPED.md)| map |
-| openshift_ssh_key | Path to your own SSH Public Key.  If none provided it will create one for you | - | string |
+| openshift_ssh_key | Your own SSH Public Key as a String.  If none provided it will create one for you | - | string |
 | openshift_additional_trust_bundle | Path to your trusted CA bundle in pem format | - | string |
 | azure_image_id | The azure image id for the coreos vm boot image | - | string |
 | azure_shared_image                    | Should the coreos image be stored in a repository | false | bool |

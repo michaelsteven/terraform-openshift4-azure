@@ -78,7 +78,7 @@ locals {
   azure_virtual_network               = (var.azure_preexisting_network && var.azure_virtual_network != null) ? var.azure_virtual_network : "${local.cluster_id}-vnet"
   azure_control_plane_subnet          = (var.azure_preexisting_network && var.azure_control_plane_subnet != null) ? var.azure_control_plane_subnet : "${local.cluster_id}-master-subnet"
   azure_compute_subnet                = (var.azure_preexisting_network && var.azure_compute_subnet != null) ? var.azure_compute_subnet : "${local.cluster_id}-worker-subnet"
-  public_ssh_key                      = var.openshift_ssh_key == "" ? tls_private_key.installkey[0].public_key_openssh : file(var.openshift_ssh_key)
+  public_ssh_key                      = var.openshift_ssh_key == "" ? tls_private_key.installkey[0].public_key_openssh : var.openshift_ssh_key
   major_version                       = join(".", slice(split(".", var.openshift_version), 0, 2))
   installer_workspace                 = "${path.root}/installer-files/"
   azure_image_id                      = var.azure_image_id != "" ? var.azure_image_id : (var.azure_shared_image ? module.shared_image[0].shared_image_id : module.image[0].image_cluster_id)
@@ -147,7 +147,7 @@ module "vnet" {
 
 module "ignition" {
   source                        = "./ignition"
-  depends_on                    = [module.image, local_file.azure_sp_json]
+  depends_on                    = [module.image, module.shared_image, local_file.azure_sp_json]
   base_domain                   = var.base_domain
   openshift_version             = var.openshift_version
   master_count                  = var.master_count
@@ -412,7 +412,7 @@ resource "azurerm_role_assignment" "network" {
   role_definition_id = (var.azure_role_id_network == "") ? data.azurerm_role_definition.contributor.id : var.azure_role_id_network
   principal_id         = azurerm_user_assigned_identity.main[0].principal_id
 }
-
+/* 
 resource "null_resource" "delete_bootstrap" {
   count = !var.phased_approach || (var.phased_approach && var.phase1_complete) ? 1 : 0
 
@@ -441,3 +441,4 @@ fi
 EOF     
   }
 }
+ */
