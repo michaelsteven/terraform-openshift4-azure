@@ -54,7 +54,6 @@ resource "null_resource" "disk_create" {
   }
 }
 
-
 data "azurerm_managed_disk" "rhcos_disk" {
   name                = "coreos-${var.openshift_version}-vhd"
   resource_group_name = var.cluster_resource_group_name
