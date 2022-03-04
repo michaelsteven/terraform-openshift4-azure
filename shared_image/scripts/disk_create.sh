@@ -17,12 +17,12 @@ MANAGED_DISK_NAME=$(create_managed_disk)
 if [[ -z "${MANAGED_DISK_NAME}" ]]; then exit 1; fi
 x=0
 MANAGED_DISK_STATE=
-while [[ ( $x -lt "${max_retries}" ) && "${MANAGED_DISK_STATE}" != "ReadyToUpload" ]]; do
+while [[ ( $x -lt "${max_retries}" ) && ("${MANAGED_DISK_STATE}" != "ReadyToUpload" || "${MANAGED_DISK_STATE}" != "ActiveUpload") ]]; do
   if [[ $x > 0 ]]; then sleep 5; fi
   MANAGED_DISK_STATE=$(get_disk_state)
   x=$(( $x + 1 ))
 done
-if [[ "${MANAGED_DISK_STATE}" != "ReadyToUpload" ]]; then exit 1; fi
+if [[ ("${MANAGED_DISK_STATE}" != "ReadyToUpload" && "${MANAGED_DISK_STATE}" != "ActiveUpload") ]]; then exit 1; fi
 
 ACCESS_SAS=$(get_access_sas)
 if [[ -z "${ACCESS_SAS}" ]]; then exit 1; fi 
