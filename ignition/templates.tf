@@ -260,7 +260,7 @@ EOF
 
 resource "local_file" "openshift-cluster-api_master-machines" {
   count    = !var.managed_infrastructure ? var.master_count : 0
-  content  = element(data.template_file.openshift-cluster-api_master-machines.*.rendered, count.index)
+  content  = data.template_file.openshift-cluster-api_master-machines.*.rendered[count.index]
   filename = "${local.installer_workspace}/openshift/99_openshift-cluster-api_master-machines-${count.index}.yaml"
   depends_on = [
     null_resource.download_binaries,
@@ -399,7 +399,8 @@ EOF
 
 resource "local_file" "openshift-cluster-api_worker-machineset" {
   count    = var.managed_infrastructure ? length(var.availability_zones) : 0
-  content  = element(data.template_file.openshift-cluster-api_worker-machineset.*.rendered, count.index)
+  content  = data.template_file.openshift-cluster-api_worker-machineset.*.rendered[count.index]
+#  content  = element(data.template_file.openshift-cluster-api_worker-machineset.*.rendered, count.index)
   filename = "${local.installer_workspace}/openshift/99_openshift-cluster-api_worker-machineset-${count.index}.yaml"
   depends_on = [
     null_resource.download_binaries,
@@ -409,7 +410,7 @@ resource "local_file" "openshift-cluster-api_worker-machineset" {
 
 resource "local_file" "openshift-cluster-api_worker-machines" {
   count    = !var.managed_infrastructure ? var.node_count : 0
-  content  = element(data.template_file.openshift-cluster-api_worker-machines.*.rendered, count.index)
+  content  = data.template_file.openshift-cluster-api_worker-machines.*.rendered[count.index]
   filename = "${local.installer_workspace}/openshift/99_openshift-cluster-api_worker-machines-${count.index}.yaml"
   depends_on = [
     null_resource.download_binaries,
@@ -547,7 +548,7 @@ EOF
 
 resource "local_file" "openshift-cluster-api_infra-machineset" {
   count    = var.managed_infrastructure && var.infra_count > 0 ? length(var.availability_zones) : 0
-  content  = element(data.template_file.openshift-cluster-api_infra-machineset.*.rendered, count.index)
+  content  = data.template_file.openshift-cluster-api_infra-machineset.*.rendered[count.index]
   filename = "${local.installer_workspace}/openshift/99_openshift-cluster-api_infra-machineset-${count.index}.yaml"
   depends_on = [
     null_resource.download_binaries,
@@ -557,7 +558,7 @@ resource "local_file" "openshift-cluster-api_infra-machineset" {
 
 resource "local_file" "openshift-cluster-api_infra-machines" {
   count    = !var.managed_infrastructure && var.infra_count > 0 ? var.infra_count : 0
-  content  = element(data.template_file.openshift-cluster-api_infra-machines.*.rendered, count.index)
+  content  = data.template_file.openshift-cluster-api_infra-machines.*.rendered[count.index]
   filename = "${local.installer_workspace}/openshift/99_openshift-cluster-api_infra-machines-${count.index}.yaml"
   depends_on = [
     null_resource.download_binaries,
@@ -903,7 +904,7 @@ EOF
 
 resource "local_file" "airgapped_registry_upgrades" {
   count    = var.airgapped["enabled"] ? 1 : 0
-  content  = element(data.template_file.airgapped_registry_upgrades.*.rendered, count.index)
+  content  = data.template_file.airgapped_registry_upgrades.*.rendered[count.index]
   filename = "${local.installer_workspace}/openshift/99_airgapped_registry_upgrades.yaml"
   depends_on = [
     null_resource.download_binaries,

@@ -152,6 +152,9 @@ resource "azurerm_linux_virtual_machine" "bootstrap" {
   computer_name = "${var.cluster_id}-bootstrap-vm"
   custom_data   = base64encode(var.ignition)
 
+  lifecycle {
+    ignore_changes = [custom_data]
+  }
   boot_diagnostics {
     storage_account_uri = var.bootlogs_sas_token != "" ? "${local.bootlogs_base_uri}?${var.bootlogs_sas_token}" : var.bootlogs_storage_account[0].primary_blob_endpoint
   }

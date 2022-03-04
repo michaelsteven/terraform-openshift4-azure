@@ -52,7 +52,7 @@ resource "azurerm_network_interface_backend_address_pool_association" "master_v4
   // conditional need to be recreated. See https://github.com/hashicorp/terraform/issues/12570
   count = (! var.private || ! var.outbound_udr) ? var.instance_count : 0
 
-  network_interface_id    = element(azurerm_network_interface.master.*.id, count.index)
+  network_interface_id    = azurerm_network_interface.master.*.id[count.index]
   backend_address_pool_id = var.elb_backend_pool_v4_id
   ip_configuration_name   = local.ip_v4_configuration_name
 }
@@ -62,7 +62,7 @@ resource "azurerm_network_interface_backend_address_pool_association" "master_v6
   // conditional need to be recreated. See https://github.com/hashicorp/terraform/issues/12570
   count = var.use_ipv6 && (! var.private || ! var.outbound_udr) ? var.instance_count : 0
 
-  network_interface_id    = element(azurerm_network_interface.master.*.id, count.index)
+  network_interface_id    = azurerm_network_interface.master.*.id[count.index]
   backend_address_pool_id = var.elb_backend_pool_v6_id
   ip_configuration_name   = local.ip_v6_configuration_name
 }
@@ -70,7 +70,7 @@ resource "azurerm_network_interface_backend_address_pool_association" "master_v6
 resource "azurerm_network_interface_backend_address_pool_association" "master_internal_v4" {
   count = var.use_ipv4 ? var.instance_count : 0
 
-  network_interface_id    = element(azurerm_network_interface.master.*.id, count.index)
+  network_interface_id    = azurerm_network_interface.master.*.id[count.index]
   backend_address_pool_id = var.ilb_backend_pool_v4_id
   ip_configuration_name   = local.ip_v4_configuration_name
 }
@@ -78,7 +78,7 @@ resource "azurerm_network_interface_backend_address_pool_association" "master_in
 resource "azurerm_network_interface_backend_address_pool_association" "master_internal_v6" {
   count = var.use_ipv6 ? var.instance_count : 0
 
-  network_interface_id    = element(azurerm_network_interface.master.*.id, count.index)
+  network_interface_id    = azurerm_network_interface.master.*.id[count.index]
   backend_address_pool_id = var.ilb_backend_pool_v6_id
   ip_configuration_name   = local.ip_v6_configuration_name
 }
@@ -94,7 +94,7 @@ resource "azurerm_linux_virtual_machine" "master" {
   location              = var.region
   zone                  = length(var.availability_zones) > 1 ? var.availability_zones[count.index] : var.availability_zones[0]
   resource_group_name   = var.resource_group_name
-  network_interface_ids = [element(azurerm_network_interface.master.*.id, count.index)]
+  network_interface_ids = [azurerm_network_interface.master.*.id[count.index]]
   size                  = var.vm_size
   admin_username        = "core"
   # The password is normally applied by WALA (the Azure agent), but this
@@ -127,6 +127,10 @@ resource "azurerm_linux_virtual_machine" "master" {
 
   boot_diagnostics {
     storage_account_uri = var.bootlogs_sas_token != "" ? "${local.bootlogs_base_uri}?${var.bootlogs_sas_token}" : var.bootlogs_storage_account[0].primary_blob_endpoint
+  }
+
+  lifecycle {
+    ignore_changes = [custom_data]
   }
 }
 
