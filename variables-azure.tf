@@ -448,3 +448,9 @@ variable "azure_shared_image_name" {
   description = "The name of the existing image stored in an existing repository"
   default     = ""
 }
+
+variable "bash_debug" {
+  type        = bool
+  description = "Turn on debugging for bash scripts"
+  default     = false
+}

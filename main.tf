@@ -119,6 +119,7 @@ module "shared_image" {
   shared_image_repo_name            = var.azure_shared_image_repo_name
   shared_image_name                 = var.azure_shared_image_name
   installer_workspace               = null_resource.installer_workspace.triggers.installer_workspace
+  bash_debug                        = var.bash_debug
 }
 
 module "vnet" {

@@ -19,12 +19,13 @@ resource "null_resource" "disk_create" {
     client_secret         = var.client_secret
     resource_group_name   = var.cluster_resource_group_name
     openshift_version     = var.openshift_version
+    bash_debug            = var.bash_debug
   }
 
   provisioner "local-exec" {
     when = create
     command = "${path.module}/scripts/disk_create.sh"
-    interpreter = ["/bin/bash", "-x"]
+    interpreter = ["/bin/bash"]
     environment = {
       INSTALLER_WORKSPACE = self.triggers.installer_workspace
       SUBSCRIPTION_ID     = self.triggers.subscription_id
@@ -35,13 +36,14 @@ resource "null_resource" "disk_create" {
       OPENSHIFT_VERSION   = self.triggers.openshift_version
       REGION              = var.region
       RHCOS_IMAGE_URL     = local.rhcos_image
+      BASH_DEBUG          = self.triggers.bash_debug
     }
   }
 
   provisioner "local-exec" {
     when    = destroy
     command = "${path.module}/scripts/disk_delete.sh"
-    interpreter = ["/bin/bash", "-x"]
+    interpreter = ["/bin/bash"]
     environment = {
       INSTALLER_WORKSPACE = self.triggers.installer_workspace
       SUBSCRIPTION_ID     = self.triggers.subscription_id
@@ -50,6 +52,7 @@ resource "null_resource" "disk_create" {
       CLIENT_SECRET       = self.triggers.client_secret
       RESOURCE_GROUP_NAME = self.triggers.resource_group_name
       OPENSHIFT_VERSION   = self.triggers.openshift_version
+      BASH_DEBUG          = self.triggers.bash_debug
     }
   }
 }
