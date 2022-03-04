@@ -33,6 +33,14 @@ function install_deps() {
   fi
 }
 
+# Description: When curl commands are passed an argument of 'sSi' the response will contain both the HTTP Header and 
+#              the HTTP Body seperated by a blank line. The response is split by this blank line and if the split string 
+#              contains both a line containing 'HTTP' and a line containing 'Content-Length' it is assumed to be 
+#              the HTTP Header and is returned.
+#
+# Arguments: An HTTP Response string
+# Return: A string containing the HTTP Header
+#
 function get_response_header() {
   local http_response_array=$(echo $1 | ${INSTALLER_WORKSPACE}jq -R -s 'split("\r \r ")')
   local http_response_array_length=$(echo "${http_response_array}" | ${INSTALLER_WORKSPACE}jq length)
@@ -53,6 +61,14 @@ function get_response_header() {
   echo "${http_response_header}"
 }
 
+# Description: When curl commands are passed an argument of 'sSi' the response will contain both the HTTP Header and 
+#              the HTTP Body seperated by a blank line. For the HTTP Body, it is assumed that it is returned as a JSON
+#              string.  The response is split by this blank line and if the split string starts with the '{' character
+#              and ends with the '}' character, it is assumed to be the HTTP Body and is returned.
+#
+# Arguments: An HTTP Response string
+# Return: A string containing the HTTP Body
+#
 function get_response_body() {
   local http_response_array=$(echo $1 | ${INSTALLER_WORKSPACE}jq -R -s 'split("\r \r ")')
   local http_response_array_length=$(echo "${http_response_array}" | ${INSTALLER_WORKSPACE}jq length)
@@ -77,18 +93,30 @@ function get_response_body() {
   echo "${http_response_body}"
 }
 
+# Arguments: An HTTP Header string
+# Return: The HTTP Return Code
+#
 function get_http_return_code() {
   echo $1 | ${INSTALLER_WORKSPACE}jq -R -s 'split("\r")' | grep HTTP | xargs | ${INSTALLER_WORKSPACE}jq -R -s 'split(" ")' | ${INSTALLER_WORKSPACE}jq -r '.[1]'
 }
 
+# Arguments: An HTTP Header string
+# Return: The HTTP Content Length of the HTTP Body
+#
 function get_content_length() {
   echo $1 | ${INSTALLER_WORKSPACE}jq -R -s 'split("\r")' | grep -i Content-Length | ${INSTALLER_WORKSPACE}jq -R -s 'split(": ")' | ${INSTALLER_WORKSPACE}jq -r '.[1]' | tr -d '",'
 }
 
+# Arguments: An HTTP Header string
+# Return: The URL to retrieve the Azure Async Operation payload
+#
 function get_operation_endpoint() {
   echo $1 | ${INSTALLER_WORKSPACE}jq -R -s 'split("\r")' | grep -i azure-asyncoperation | ${INSTALLER_WORKSPACE}jq -R -s 'split(": ")' | ${INSTALLER_WORKSPACE}jq -r '.[1]' | tr -d '",'
 }
 
+# Arguments: None
+# Return: A string containing the Authentication Bearer Token
+#
 function get_bearer_token() {
   local http_endpoint="https://login.microsoftonline.com/${TENANT_ID}/oauth2/token?api-version=1.0"
   local http_request_data="grant_type=client_credentials&client_id=${CLIENT_ID}&client_secret=${CLIENT_SECRET}&resource=https%3A%2F%2Fmanagement.azure.com%2F"
@@ -107,6 +135,9 @@ function get_bearer_token() {
   echo "${http_body}" | ${INSTALLER_WORKSPACE}jq -r '(.access_token)'
 }
 
+# Arguments: URL to a file, in this case the RHCOS VHD to be downloaded
+# Return: The size of the disk file in bytes
+#
 function get_disk_size() {
   local http_endpoint=$1
   local http_response=$(curl -sSI -X GET "${http_endpoint}")
@@ -120,6 +151,9 @@ function get_disk_size() {
   echo $(get_content_length "${http_header}")
 }
 
+# Arguments: None
+# Return: The name of the Azure disk created
+#
 function create_managed_disk() {
   local http_endpoint="https://management.azure.com/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_NAME}/providers/Microsoft.Compute/disks/coreos-${OPENSHIFT_VERSION}-vhd?api-version=2020-12-01"
   
@@ -142,6 +176,9 @@ function create_managed_disk() {
   echo "${http_body}" | ${INSTALLER_WORKSPACE}jq -r '(.name)'
 }
 
+# Arguments: None
+# Return: None
+#
 function delete_managed_disk() {
   local http_endpoint="https://management.azure.com/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_NAME}/providers/Microsoft.Compute/disks/coreos-${OPENSHIFT_VERSION}-vhd?api-version=2020-12-01"
   local http_request_data=""
@@ -155,6 +192,10 @@ function delete_managed_disk() {
   if [[ "${http_return_code}" -ne 200 && "${http_return_code}" -ne 202 ]]; then return 1; fi
 }
 
+# Arguments: None
+# Return: The Azure Disk State as the disk is created, granted write access, revoked write access, and 
+#         data uploaded to the disk. [ReadyToUpload, ActiveUpload, Unattached]
+#
 function get_disk_state() {
   local http_endpoint="https://management.azure.com/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_NAME}/providers/Microsoft.Compute/disks/coreos-${OPENSHIFT_VERSION}-vhd?api-version=2020-12-01"
 
@@ -172,6 +213,10 @@ function get_disk_state() {
   echo "${http_body}" | ${INSTALLER_WORKSPACE}jq -r '(.properties.diskState)'
 }
 
+# Arguments: None
+# Return: A String containing the Access SAS URL to the disk when the original request is performed
+#         asynchronously as determined by Azure.
+#
 function get_asyncoperation_access_sas() {
   local http_endpoint=$1
 
@@ -204,6 +249,9 @@ function get_asyncoperation_access_sas() {
   echo "${access_sas}"
 }
 
+# Arguments: None
+# Return: A String containing the Access SAS URL to the disk.
+#
 function get_access_sas() {
   local http_endpoint="https://management.azure.com/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_NAME}/providers/Microsoft.Compute/disks/coreos-${OPENSHIFT_VERSION}-vhd/beginGetAccess?api-version=2020-12-01"
   local http_request_data='{"access":"Write","durationInSeconds":86400}'
@@ -227,10 +275,16 @@ function get_access_sas() {
   echo "${access_sas}"
 }
 
+# Arguments: None
+# Return: None
+#
 function rhcos_disk_copy() {
   "${INSTALLER_WORKSPACE}azcopy" copy "${RHCOS_IMAGE_URL}" "${ACCESS_SAS}" --blob-type PageBlob
 }
 
+# Arguments: None
+# Return: None
+#
 function revoke_access_sas() {
   local http_endpoint="https://management.azure.com/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_NAME}/providers/Microsoft.Compute/disks/coreos-${OPENSHIFT_VERSION}-vhd/endGetAccess?api-version=2020-12-01"
 

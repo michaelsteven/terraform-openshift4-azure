@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e
+if [[ "${BASH_DEBUG}" == "true" || "${TF_LOG}" == "TRACE" || "${TF_LOG}" == "DEBUG" ]]; then set -x; fi
 
 scripts_dir="$(dirname "$0")"
 source "$scripts_dir/disk_functions.sh"

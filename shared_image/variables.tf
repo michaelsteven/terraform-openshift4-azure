@@ -60,3 +60,9 @@ variable "installer_workspace" {
   description = "The working directory used to hold temporary files during installation"
   default     = ""
 }
+
+variable "bash_debug" {
+  type        = bool
+  description = "Turn on debugging for bash scripts"
+  default     = false
+}
