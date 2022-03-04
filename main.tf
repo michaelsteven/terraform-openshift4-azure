@@ -146,6 +146,14 @@ module "vnet" {
   dns_apps_ip               = var.apps_dns_ip
 }
 
+# module "byo_dns" {
+#   placeholder module to add custom dns logic 
+#   count = openshift_byo_dns ? 1 : 0
+#   source                    = "./byo_dns"
+#   dns_api_ip                = module.vnet.dns_api_ip_v4
+#   dns_apps_ip               = module.vnet.dns_apps_ip_v4
+# }
+
 module "ignition" {
   source                        = "./ignition"
   depends_on                    = [module.image, module.shared_image, local_file.azure_sp_json]

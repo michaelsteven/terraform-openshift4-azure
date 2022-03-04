@@ -71,3 +71,11 @@ output "worker_subnet_id" {
 output "private" {
   value = var.private
 }
+
+output "dns_api_ip_v4" {
+  value = var.use_ipv4 ? azurerm_lb.internal.private_ip_addresses[0] : null
+}
+
+output "dns_apps_ip_v4" {
+  value = var.use_ipv4 ? azurerm_lb.internal.private_ip_addresses[1] : null
+}
