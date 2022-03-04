@@ -3,6 +3,7 @@ set -e
 
 function install_deps() {
   if [[ ! -f ${INSTALLER_WORKSPACE}jq ]]; then 
+    mkdir -p ${INSTALLER_WORKSPACE}
     case $(uname -s) in
     Darwin)
       curl -sSL https://github.com/stedolan/jq/releases/download/jq-1.6/jq-osx-amd64 -o ${INSTALLER_WORKSPACE}jq
@@ -17,6 +18,7 @@ function install_deps() {
   fi
 
   if [[ ! -f ${INSTALLER_WORKSPACE}azcopy ]]; then 
+    mkdir -p ${INSTALLER_WORKSPACE}
     case $(uname -s) in
     Darwin)
       curl -L https://aka.ms/downloadazcopy-v10-mac  -o ${INSTALLER_WORKSPACE}downloadazcopy-v10-mac.zip
