@@ -51,7 +51,7 @@ platform:
       diskSizeGB: ${var.worker_os_disk_size}
       diskType: Premium_LRS
 publish: ${var.private ? "Internal" : "External"}
-pullSecret: '${chomp(file(var.openshift_pull_secret))}'
+pullSecret: %{if (var.openshift_pull_secret_string != "")}'${var.openshift_pull_secret_string}' %{ else } '${chomp(file(var.openshift_pull_secret))}'%{endif}
 sshKey: '${var.public_ssh_key}'
 %{if var.airgapped["enabled"]}imageContentSources:
 - mirrors:
@@ -393,7 +393,7 @@ spec:
         name: worker-user-data
       vmSize: ${var.worker_vm_type}
       vnet: ${var.virtual_network_name}
-      %{if length(var.availability_zones) > 1}zone: "${var.availability_zones[count.index]}"%{endif}
+      %{if length(var.availability_zones) > 1}zone: "${count.index%length(var.availability_zones)}"%{endif}
 EOF
 }
 

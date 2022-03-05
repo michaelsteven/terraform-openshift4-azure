@@ -209,3 +209,9 @@ variable "ignition_sas_container_name" {
   type        = string
   default     = ""
 }
+
+variable "openshift_pull_secret_string" {
+  type        = string
+  description = "pull-secret as a string"
+  default     = ""
+}

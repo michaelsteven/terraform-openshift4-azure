@@ -454,3 +454,10 @@ variable "bash_debug" {
   description = "Turn on debugging for bash scripts"
   default     = false
 }
+
+variable "openshift_pull_secret_string" {
+  type        = string
+  description = "pull-secret string"
+  default     = ""
+}
+

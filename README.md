@@ -1,13 +1,13 @@
 # OpenShift 4 UPI on Azure Cloud
 
-### *It is the primary intent of this branch to cover the scenario where the cluster will be fully provisioned using terraform during install time. It is a UPI implementation without cluster infrastructure management capabilites*
+### *The primary intent of this branch to cover the scenario where the cluster will be fully provisioned using terraform during install time. It is a UPI implementation without cluster infrastructure management capabilites*
 
 
 This [terraform](terraform.io) implementation will deploy OpenShift 4.x into an Azure VNET, with two subnets for controlplane and worker nodes.  Traffic to the master nodes is handled via a pair of loadbalancers, one for internal traffic and another for external API traffic.  Application loadbalancing is handled by a third loadbalancer that talks to the router pods on the infra nodes.  Worker, Infra and Master nodes are deployed across 3 Availability Zones. 
 
 ** Note that this version can implement the following custom scenario:
 1. If needed, leverage an existing Azure Storage Account for coreos vhd, boot logs, and installer ignition files
-2. If needed, predefined IPs for the existing DNS record sets (api, api-int, and *.app)
+2. If needed, predefine the load balancer IPs for the existing DNS record sets (api, api-int, and *.app)
 3. If needed, remove cluster self-manangement capabilites and deploy as bare metal.
 
 
@@ -69,6 +69,7 @@ azure_storage_account_name        = "XXXX"
 | openshift_cluster_network_host_prefix | Detemines the number of pods a node can host.  23 gives you 510 pods per node. | 23 | string |
 | openshift_service_network_cidr        | CIDR for Kubernetes services                                   | 172.30.0.0/16   | string |
 | openshift_pull_secret                 | Filename that holds your OpenShift [pull-secret](https://cloud.redhat.com/openshift/install/azure/installer-provisioned) | - | string |
+| openshift_pull_secret_string          | pull-secret as a string and escaped for doubled quotes. Can be used instead of openshift_pull_secret. Ex: {\\"auths\\": {\\"cloud.openshift.com\\": {\\"auth\\": \\"XYZ\\"}}}  | "" | string |
 | azure_master_root_volume_size         | Size of master node root volume                                | 512             | string |
 | azure_worker_root_volume_size         | Size of worker node root volume                                | 128             | string |
 | azure_infra_root_volume_size          | Size of infra node root volume                                 | 128             | string |

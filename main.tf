@@ -168,6 +168,7 @@ module "ignition" {
   service_network_cidr          = var.openshift_service_network_cidr
   azure_dns_resource_group_name = var.azure_base_domain_resource_group_name
   openshift_pull_secret         = var.openshift_pull_secret
+  openshift_pull_secret_string  = var.openshift_pull_secret_string
   public_ssh_key                = chomp(local.public_ssh_key)
   cluster_id                    = local.cluster_id
   resource_group_name           = data.azurerm_resource_group.main.name
