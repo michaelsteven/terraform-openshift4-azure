@@ -78,12 +78,6 @@ resource "null_resource" "download_binaries" {
       path_root            = path.root
     })
   }
-
-  provisioner "local-exec" {
-    when    = destroy
-    command = "rm -rf ./installer-files"
-  }
-
 }
 
 

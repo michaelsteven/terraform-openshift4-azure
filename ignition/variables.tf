@@ -198,6 +198,12 @@ variable "managed_infrastructure" {
   default     = true  
 }
 
+variable "use_default_imageregistry" {
+  description = "Define if default imageregistry is required"
+  type        = bool
+  default     = true
+}
+
 variable "ignition_sas_token" {
   description = "The SAS storage token string for the ignition files"
   type        = string

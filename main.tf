@@ -148,7 +148,7 @@ module "vnet" {
 
 module "ignition" {
   source                        = "./ignition"
-  depends_on                    = [module.image, module.shared_image, local_file.azure_sp_json]
+  depends_on                    = [module.image, module.shared_image, local_file.azure_sp_json, null_resource.installer_workspace]
   base_domain                   = var.base_domain
   openshift_version             = var.openshift_version
   master_count                  = var.master_count
@@ -191,6 +191,7 @@ module "ignition" {
   trust_bundle                  = var.openshift_additional_trust_bundle
   byo_dns                       = var.openshift_byo_dns
   managed_infrastructure        = var.openshift_managed_infrastructure
+  use_default_imageregistry     = var.use_default_imageregistry
   ignition_sas_token            = var.azure_ignition_sas_token
   ignition_sas_container_name   = var.azure_ignition_sas_container_name
 }
