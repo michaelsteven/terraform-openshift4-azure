@@ -20,6 +20,7 @@ resource "null_resource" "disk_create" {
     resource_group_name   = var.cluster_resource_group_name
     openshift_version     = var.openshift_version
     bash_debug            = var.bash_debug
+    cluster_unique_string = var.cluster_unique_string
   }
 
   provisioner "local-exec" {
@@ -37,6 +38,7 @@ resource "null_resource" "disk_create" {
       REGION              = var.region
       RHCOS_IMAGE_URL     = local.rhcos_image
       BASH_DEBUG          = self.triggers.bash_debug
+      CLUSTER_ID          = self.triggers.cluster_unique_string
     }
   }
 
@@ -53,12 +55,13 @@ resource "null_resource" "disk_create" {
       RESOURCE_GROUP_NAME = self.triggers.resource_group_name
       OPENSHIFT_VERSION   = self.triggers.openshift_version
       BASH_DEBUG          = self.triggers.bash_debug
+      CLUSTER_ID          = self.triggers.cluster_unique_string      
     }
   }
 }
 
 data "azurerm_managed_disk" "rhcos_disk" {
-  name                = "coreos-${var.openshift_version}-vhd"
+  name                = "coreos-${var.openshift_version}-${var.cluster_unique_string}-vhd"
   resource_group_name = var.cluster_resource_group_name
   depends_on = [
     null_resource.disk_create

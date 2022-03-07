@@ -157,7 +157,7 @@ function get_disk_size() {
 # Return: The name of the Azure disk created
 #
 function create_managed_disk() {
-  local http_endpoint="https://management.azure.com/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_NAME}/providers/Microsoft.Compute/disks/coreos-${OPENSHIFT_VERSION}-vhd?api-version=2020-12-01"
+  local http_endpoint="https://management.azure.com/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_NAME}/providers/Microsoft.Compute/disks/coreos-${OPENSHIFT_VERSION}-${CLUSTER_ID}-vhd?api-version=2020-12-01"
   
   local disk_size_bytes=$(get_disk_size "${RHCOS_IMAGE_URL}")
   if [[ -z "${disk_size_bytes}" || "${disk_size_bytes}" -lt 20972032 ]]; then return 1; fi
@@ -182,7 +182,7 @@ function create_managed_disk() {
 # Return: None
 #
 function delete_managed_disk() {
-  local http_endpoint="https://management.azure.com/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_NAME}/providers/Microsoft.Compute/disks/coreos-${OPENSHIFT_VERSION}-vhd?api-version=2020-12-01"
+  local http_endpoint="https://management.azure.com/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_NAME}/providers/Microsoft.Compute/disks/coreos-${OPENSHIFT_VERSION}-${CLUSTER_ID}-vhd?api-version=2020-12-01"
   local http_request_data=""
 
   local http_response=$(curl -sSi -X DELETE -H "Authorization: Bearer ${BEARER_TOKEN}" -H 'Content-Type:application/json' -H 'Accept:application/json' -d "${http_request_data}" "${http_endpoint}")
@@ -199,7 +199,7 @@ function delete_managed_disk() {
 #         data uploaded to the disk. [ReadyToUpload, ActiveUpload, Unattached]
 #
 function get_disk_state() {
-  local http_endpoint="https://management.azure.com/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_NAME}/providers/Microsoft.Compute/disks/coreos-${OPENSHIFT_VERSION}-vhd?api-version=2020-12-01"
+  local http_endpoint="https://management.azure.com/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_NAME}/providers/Microsoft.Compute/disks/coreos-${OPENSHIFT_VERSION}-${CLUSTER_ID}-vhd?api-version=2020-12-01"
 
   local http_response=$(curl -sSi -X GET -H "Authorization: Bearer ${BEARER_TOKEN}" "${http_endpoint}")
 
@@ -255,7 +255,7 @@ function get_asyncoperation_access_sas() {
 # Return: A String containing the Access SAS URL to the disk.
 #
 function get_access_sas() {
-  local http_endpoint="https://management.azure.com/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_NAME}/providers/Microsoft.Compute/disks/coreos-${OPENSHIFT_VERSION}-vhd/beginGetAccess?api-version=2020-12-01"
+  local http_endpoint="https://management.azure.com/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_NAME}/providers/Microsoft.Compute/disks/coreos-${OPENSHIFT_VERSION}-${CLUSTER_ID}-vhd/beginGetAccess?api-version=2020-12-01"
   local http_request_data='{"access":"Write","durationInSeconds":86400}'
 
   local http_response=$(curl -sSi -X POST -H "Authorization: Bearer ${BEARER_TOKEN}" -H 'Content-Type:application/json' -H 'Accept:application/json' -d "${http_request_data}" "${http_endpoint}")
@@ -288,7 +288,7 @@ function rhcos_disk_copy() {
 # Return: None
 #
 function revoke_access_sas() {
-  local http_endpoint="https://management.azure.com/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_NAME}/providers/Microsoft.Compute/disks/coreos-${OPENSHIFT_VERSION}-vhd/endGetAccess?api-version=2020-12-01"
+  local http_endpoint="https://management.azure.com/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_NAME}/providers/Microsoft.Compute/disks/coreos-${OPENSHIFT_VERSION}-${CLUSTER_ID}-vhd/endGetAccess?api-version=2020-12-01"
 
   local http_response=$(curl -sSi -X POST -H "Authorization: Bearer ${BEARER_TOKEN}" -d "" "${http_endpoint}")
 
