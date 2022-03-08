@@ -76,6 +76,7 @@ resource "null_resource" "download_binaries" {
       pull_secret          = var.openshift_pull_secret
       openshift_version    = var.openshift_version
       path_root            = path.root
+      proxy_eval           = var.proxy_eval
     })
   }
 }

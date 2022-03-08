@@ -2,6 +2,10 @@
 
 test -e ${installer_workspace} || mkdir -p ${installer_workspace}
 
+if  [[ "${proxy_eval}" == "true" ]]; then 
+    export no_proxy=mirror.openshift.com;
+fi
+
 case $(uname -s) in
   Darwin)
     wget -r -l1 -np -nd -q ${installer_url} -P ${installer_workspace} -A 'openshift-install-mac-4*.tar.gz'

@@ -120,6 +120,7 @@ module "shared_image" {
   shared_image_name                 = var.azure_shared_image_name
   installer_workspace               = null_resource.installer_workspace.triggers.installer_workspace
   bash_debug                        = var.bash_debug
+  proxy_eval                        = var.no_proxy_test   
 }
 
 module "vnet" {
@@ -152,6 +153,9 @@ module "vnet" {
 #   source                    = "./byo_dns"
 #   dns_api_ip                = module.vnet.dns_api_ip_v4
 #   dns_apps_ip               = module.vnet.dns_apps_ip_v4
+#   api_record_set            = "api.${var.cluster_name}.${var.base_domain}"
+#   api-int_record_set        = "api-int.${var.cluster_name}.${var.base_domain}"
+#   apps_record_set           = "*.apps.${var.cluster_name}.${var.base_domain}"
 # }
 
 module "ignition" {
@@ -203,6 +207,7 @@ module "ignition" {
   use_default_imageregistry     = var.use_default_imageregistry
   ignition_sas_token            = var.azure_ignition_sas_token
   ignition_sas_container_name   = var.azure_ignition_sas_container_name
+  proxy_eval                    = var.no_proxy_test 
 }
 
 module "bootstrap" {
