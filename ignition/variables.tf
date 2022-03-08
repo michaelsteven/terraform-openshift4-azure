@@ -221,3 +221,9 @@ variable "openshift_pull_secret_string" {
   description = "pull-secret as a string"
   default     = ""
 }
+
+variable "proxy_eval" {
+  type        = bool
+  description = "Turn on/off proxy evaluation for testing"
+  default     = false  
+}
