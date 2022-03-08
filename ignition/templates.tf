@@ -750,6 +750,49 @@ resource "local_file" "configure-image-registry-job" {
   ]
 }
 
+### Internal registry
+
+data "template_file" "configure-image-registry" {
+  count    = !var.use_default_imageregistry ? 1 : 0
+  template = <<EOF
+apiVersion: imageregistry.operator.openshift.io/v1
+kind: Config
+metadata:
+  finalizers:
+  - imageregistry.operator.openshift.io/finalizer
+  name: cluster
+spec:
+  logLevel: Normal
+  managementState: Removed
+  nodeSelector:
+    node-role.kubernetes.io/infra: ""
+  observedConfig: null
+  operatorLogLevel: Normal
+  proxy: {}
+  replicas: 0
+  requests:
+    read:
+      maxWaitInQueue: 0s
+    write:
+      maxWaitInQueue: 0s
+  rolloutStrategy: RollingUpdate
+  storage:
+    azure:
+      emptyDir:
+  unsupportedConfigOverrides: null
+EOF
+}
+
+resource "local_file" "configure-image-registry" {
+  count    = !var.use_default_imageregistry ? 1 : 0
+  content  = element(data.template_file.configure-image-registry.*.rendered, count.index)
+  filename = "${local.installer_workspace}/openshift/99_configure-image-registry.yaml"
+  depends_on = [
+    null_resource.download_binaries,
+    null_resource.generate_manifests,
+  ]
+}
+
 data "template_file" "configure-ingress-job-serviceaccount" {
   template = <<EOF
 apiVersion: v1
