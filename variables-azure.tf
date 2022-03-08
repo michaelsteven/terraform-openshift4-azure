@@ -461,3 +461,9 @@ variable "openshift_pull_secret_string" {
   default     = ""
 }
 
+variable "no_proxy_test" {
+  type        = bool
+  description = "Turn on/off proxy evaluation for testing"
+  default     = false  
+}
+

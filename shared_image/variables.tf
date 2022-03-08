@@ -66,3 +66,9 @@ variable "bash_debug" {
   description = "Turn on debugging for bash scripts"
   default     = false
 }
+
+variable "proxy_eval" {
+  type        = bool
+  description = "Turn on/off proxy evaluation for testing"
+  default     = false  
+}
