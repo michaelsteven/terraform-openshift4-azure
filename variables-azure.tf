@@ -410,13 +410,13 @@ variable "azure_role_id_network" {
 variable "use_default_imageregistry" {
   description = "Define if default imageregistry is required"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "openshift_managed_infrastructure" {
   description = "Define if the infrastructure is managed by openshift"
   type        = bool
-  default     = true  
+  default     = false  
 }
 
 variable "azure_worker_root_volume_type" {
