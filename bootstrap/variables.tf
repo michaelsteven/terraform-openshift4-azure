@@ -58,19 +58,8 @@ variable "ilb_backend_pool_v6_id" {
   description = "The internal load balancer bakend pool id for ipv6. used to attach the bootstrap NIC"
 }
 
-variable "bootlogs_storage_account" {
-  type        = any
-  description = "the storage account for the cluster. It can be used for boot diagnostics."
-}
-
-variable "bootlogs_storage_account_name" {
-  description = "The storage account name for the bootlogs"
-  type        = string
-  default     = ""
-}
-
-variable "bootlogs_sas_token" {
-  description = "The SAS storage token string for the boot diagnostic files"
+variable "bootlogs_uri" {
+  description = "The boot diagnostics storage account uri for storing the server boot logs"
   type        = string
   default     = ""
 }

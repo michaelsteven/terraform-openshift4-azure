@@ -449,6 +449,12 @@ variable "azure_shared_image_name" {
   default     = ""
 }
 
+variable "use_bootlogs_storage_account" {
+  type        = bool
+  description = "Create bootlogs in the defined storage account"
+  default     = false
+}
+
 variable "bash_debug" {
   type        = bool
   description = "Turn on debugging for bash scripts"

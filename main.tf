@@ -82,7 +82,9 @@ locals {
   major_version                       = join(".", slice(split(".", var.openshift_version), 0, 2))
   installer_workspace                 = "${path.root}/installer-files/"
   azure_image_id                      = var.azure_image_id != "" ? var.azure_image_id : (var.azure_shared_image ? module.shared_image[0].shared_image_id : module.image[0].image_cluster_id)
-  azure_bootlogs_storage_account_name = var.azure_bootlogs_sas_token != "" ? var.azure_bootlogs_storage_account_name : data.azurerm_storage_account.bootlogs[0].name
+  azure_bootlogs_storage_account_name = var.use_bootlogs_storage_account ? ( var.azure_bootlogs_sas_token != "" ? var.azure_bootlogs_storage_account_name : data.azurerm_storage_account.bootlogs[0].name ) : ""
+  azure_bootlogs_base_uri             = "https://${local.azure_bootlogs_storage_account_name}.blob.core.windows.net/"
+  azure_bootlogs_storage_account_uri  = var.use_bootlogs_storage_account ? ( var.azure_bootlogs_sas_token != "" ? "${local.azure_bootlogs_base_uri}?${var.azure_bootlogs_sas_token}" : data.azurerm_storage_account.bootlogs[0].primary_blob_endpoint ) : ""
 }
 
 module "image" {
@@ -220,9 +222,7 @@ module "bootstrap" {
   ilb_backend_pool_v4_id    = module.vnet.internal_lb_backend_pool_v4_id
   ilb_backend_pool_v6_id    = module.vnet.internal_lb_backend_pool_v6_id
   tags                      = local.tags
-  bootlogs_storage_account      = data.azurerm_storage_account.bootlogs
-  bootlogs_storage_account_name = local.azure_bootlogs_storage_account_name
-  bootlogs_sas_token            = var.azure_bootlogs_sas_token
+  bootlogs_uri              = local.azure_bootlogs_storage_account_uri
   nsg_name                  = module.vnet.cluster_nsg_name
   private                   = module.vnet.private
   outbound_udr              = var.azure_outbound_user_defined_routing
@@ -252,9 +252,7 @@ module "master" {
   ilb_backend_pool_v6_id = module.vnet.internal_lb_backend_pool_v6_id
   subnet_id              = module.vnet.master_subnet_id
   instance_count         = var.master_count
-  bootlogs_storage_account      = data.azurerm_storage_account.bootlogs
-  bootlogs_storage_account_name = local.azure_bootlogs_storage_account_name
-  bootlogs_sas_token            = var.azure_bootlogs_sas_token
+  bootlogs_uri           = local.azure_bootlogs_storage_account_uri
   os_volume_type         = var.azure_master_root_volume_type
   os_volume_size         = var.azure_master_root_volume_size
   private                = module.vnet.private
@@ -290,9 +288,7 @@ module "infra" {
   ilb_backend_pool_v6_id = module.vnet.internal_lb_apps_backend_pool_v6_id
   subnet_id              = module.vnet.worker_subnet_id
   instance_count         = var.infra_count
-  bootlogs_storage_account      = data.azurerm_storage_account.bootlogs
-  bootlogs_storage_account_name = local.azure_bootlogs_storage_account_name
-  bootlogs_sas_token            = var.azure_bootlogs_sas_token
+  bootlogs_uri           = local.azure_bootlogs_storage_account_uri
   os_volume_type         = var.azure_worker_root_volume_type
   os_volume_size         = var.azure_infra_root_volume_size
   private                = module.vnet.private
@@ -329,9 +325,7 @@ module "worker" {
   ilb_backend_pool_v6_id = module.vnet.internal_lb_apps_backend_pool_v6_id
   subnet_id              = module.vnet.worker_subnet_id
   instance_count         = var.worker_count
-  bootlogs_storage_account      = data.azurerm_storage_account.bootlogs
-  bootlogs_storage_account_name = local.azure_bootlogs_storage_account_name
-  bootlogs_sas_token            = var.azure_bootlogs_sas_token
+  bootlogs_uri           = local.azure_bootlogs_storage_account_uri
   os_volume_type         = var.azure_worker_root_volume_type
   os_volume_size         = var.azure_worker_root_volume_size
   private                = module.vnet.private
@@ -379,7 +373,7 @@ data "azurerm_resource_group" "bootlogs_storage" {
 }
 
 resource "azurerm_storage_account" "bootlogs" {
-  count = var.azure_bootlogs_storage_account_name == "" ? 1 : 0
+  count = var.use_bootlogs_storage_account && var.azure_bootlogs_storage_account_name == "" ? 1 : 0
 
   name                     = "bootlogs${var.cluster_name}${random_string.cluster_id.result}"
   resource_group_name      = data.azurerm_resource_group.bootlogs_storage.name
@@ -389,7 +383,7 @@ resource "azurerm_storage_account" "bootlogs" {
 }
 
 data "azurerm_storage_account" "bootlogs" {
-  count = var.azure_bootlogs_sas_token == "" ? 1 : 0
+  count = var.use_bootlogs_storage_account && var.azure_bootlogs_sas_token == "" ? 1 : 0
 
   name                     = var.azure_bootlogs_storage_account_name != "" ? var.azure_bootlogs_storage_account_name : azurerm_storage_account.bootlogs[0].name
   resource_group_name      = data.azurerm_resource_group.bootlogs_storage.name
