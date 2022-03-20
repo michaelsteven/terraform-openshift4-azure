@@ -281,6 +281,9 @@ function get_access_sas() {
 # Return: None
 #
 function rhcos_disk_copy() {
+  if  $PROXY_EVAL; then 
+    export no_proxy=.blob.storage.azure.net;
+  fi
   "${INSTALLER_WORKSPACE}azcopy" copy "${RHCOS_IMAGE_URL}" "${ACCESS_SAS}" --blob-type PageBlob
 }
 

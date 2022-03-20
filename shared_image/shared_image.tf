@@ -21,6 +21,7 @@ resource "null_resource" "disk_create" {
     openshift_version     = var.openshift_version
     bash_debug            = var.bash_debug
     cluster_unique_string = var.cluster_unique_string
+    proxy_eval            = var.proxy_eval
   }
 
   provisioner "local-exec" {
@@ -39,6 +40,7 @@ resource "null_resource" "disk_create" {
       RHCOS_IMAGE_URL     = local.rhcos_image
       BASH_DEBUG          = self.triggers.bash_debug
       CLUSTER_ID          = self.triggers.cluster_unique_string
+      PROXY_EVAL          = self.triggers.proxy_eval
     }
   }
 

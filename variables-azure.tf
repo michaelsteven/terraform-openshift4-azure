@@ -410,13 +410,13 @@ variable "azure_role_id_network" {
 variable "use_default_imageregistry" {
   description = "Define if default imageregistry is required"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "openshift_managed_infrastructure" {
   description = "Define if the infrastructure is managed by openshift"
   type        = bool
-  default     = true  
+  default     = false  
 }
 
 variable "azure_worker_root_volume_type" {
@@ -465,5 +465,11 @@ variable "openshift_pull_secret_string" {
   type        = string
   description = "pull-secret string"
   default     = ""
+}
+
+variable "no_proxy_test" {
+  type        = bool
+  description = "Turn on/off proxy evaluation for testing"
+  default     = false  
 }
 
