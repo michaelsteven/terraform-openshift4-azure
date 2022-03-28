@@ -288,9 +288,15 @@ variable "openshift_ssh_key" {
 }
 
 variable "openshift_byo_dns" {
-  description = "Do not deploy any public or private DNS zone into Azure"
+  description = "Do not deploy any public or private DNS zone into Azure.  Left for backward compatability, prefer to use 'openshift_dns_provider' instead"
   type        = bool
   default     = false
+}
+
+variable "openshift_dns_provider" {
+  description = "Specify whether 'azure', 'infoblox', or '' should be used as the dns provider.  If manual or none, set to ''"
+  type        = string
+  default     = "azure"
 }
 
 variable "api_and_api-int_dns_ip" {
@@ -473,3 +479,41 @@ variable "no_proxy_test" {
   default     = false  
 }
 
+variable "infoblox_fqdn" {
+  type        = string
+  description = "The Infoblox host fully qualified domain name or ip address"
+  default     = ""
+}
+
+variable "infoblox_username" {
+  type        = string
+  description = "The Infoblox credentials username"
+  default     = ""
+}
+
+variable "infoblox_password" {
+  type        = string
+  description = "The Infoblox credentials password"
+  default     = ""
+}
+
+variable "infoblox_allow_any" {
+  type        = bool
+  description = "Is the Infoblox allow any policy set to default, allowing wildcard dns names"
+  default     = false
+}
+
+variable "infoblox_apps_dns_entries" {
+  type        = list(string)
+  description = "The list of openshift *.apps dns entires if wildcards are not supported by Infoblox"
+  default = [
+    "oauth-openshift",
+    "console-openshift-console",
+    "downloads-openshift-console",
+    "canary-openshift-ingress-canary",
+    "alertmanager-main-openshift-monitoring",
+    "grafana-openshift-monitoring",
+    "prometheus-k8s-openshift-monitoring",
+    "thanos-querier-openshift-monitoring"
+  ]
+}

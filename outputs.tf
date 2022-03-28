@@ -15,9 +15,9 @@ output "bootstrap_public_ip" {
 }
 
 output "api-int-ipaddress" {
-  value = var.openshift_byo_dns ? module.vnet.internal_lb_ip_v4_address : null
+  value = var.openshift_byo_dns || var.openshift_dns_provider != "azure" ? module.vnet.internal_lb_ip_v4_address : null
 }
 
 output "api-ipaddress" {
-  value = var.openshift_byo_dns ? module.vnet.public_lb_ip_v4_address : null
+  value = var.openshift_byo_dns || var.openshift_dns_provider != "azure" ? module.vnet.public_lb_ip_v4_address : null
 }
