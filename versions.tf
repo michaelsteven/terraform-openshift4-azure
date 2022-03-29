@@ -17,5 +17,9 @@ terraform {
     template = {
       source = "hashicorp/template"
     }
+    infoblox = {
+      source = "infobloxopen/infoblox"
+      version = "2.1.0"
+    }
   }
 }

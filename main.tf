@@ -170,6 +170,12 @@ module "dns" {
   emulate_single_stack_ipv6       = var.azure_emulate_single_stack_ipv6
 }
 
+provider "infoblox" {
+  username                        = var.infoblox_username
+  password                        = var.infoblox_password
+  server                          = var.infoblox_fqdn
+}
+
 module "infoblox_dns" {
   count                           = var.azure_private && var.openshift_dns_provider == "infoblox" ? 1 : 0
   source                          = "./infoblox_dns"
