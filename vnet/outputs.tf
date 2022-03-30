@@ -49,7 +49,17 @@ output "internal_lb_ip_v4_address" {
 output "internal_lb_ip_v6_address" {
   // TODO: internal LB should block v4 for better single stack emulation (&& ! var.emulate_single_stack_ipv6)
   //   but RHCoS initramfs can't do v6 and so fails to ignite. https://issues.redhat.com/browse/GRPA-1343 
-  value = var.use_ipv6 ? azurerm_lb.internal.private_ip_addresses[1] : null
+  value = var.use_ipv6 ? ( var.use_ipv4 ? azurerm_lb.internal.private_ip_addresses[1] : azurerm_lb.internal.private_ip_addresses[0] ) : null
+}
+
+output "internal_lb_apps_ip_v4_address" {
+  value = var.use_ipv4 ? ( var.use_ipv6 ? azurerm_lb.internal.private_ip_addresses[2] : azurerm_lb.internal.private_ip_addresses[1] ) : null
+}
+
+output "internal_lb_apps_ip_v6_address" {
+  // TODO: internal LB should block v4 for better single stack emulation (&& ! var.emulate_single_stack_ipv6)
+  //   but RHCoS initramfs can't do v6 and so fails to ignite. https://issues.redhat.com/browse/GRPA-1343 
+  value = var.use_ipv6 ? ( var.use_ipv4 ? azurerm_lb.internal.private_ip_addresses[3] : azurerm_lb.internal.private_ip_addresses[1] ) : null
 }
 
 output "cluster_nsg_name" {
@@ -70,12 +80,4 @@ output "worker_subnet_id" {
 
 output "private" {
   value = var.private
-}
-
-output "dns_api_ip_v4" {
-  value = var.use_ipv4 ? azurerm_lb.internal.private_ip_addresses[0] : null
-}
-
-output "dns_apps_ip_v4" {
-  value = var.use_ipv4 ? azurerm_lb.internal.private_ip_addresses[1] : null
 }

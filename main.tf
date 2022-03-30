@@ -82,7 +82,9 @@ locals {
   major_version                       = join(".", slice(split(".", var.openshift_version), 0, 2))
   installer_workspace                 = "${path.root}/installer-files/"
   azure_image_id                      = var.azure_image_id != "" ? var.azure_image_id : (var.azure_shared_image ? module.shared_image[0].shared_image_id : module.image[0].image_cluster_id)
-  azure_bootlogs_storage_account_name = var.azure_bootlogs_sas_token != "" ? var.azure_bootlogs_storage_account_name : data.azurerm_storage_account.bootlogs[0].name
+  azure_bootlogs_storage_account_name = var.use_bootlogs_storage_account ? ( var.azure_bootlogs_sas_token != "" ? var.azure_bootlogs_storage_account_name : data.azurerm_storage_account.bootlogs[0].name ) : ""
+  azure_bootlogs_base_uri             = "https://${local.azure_bootlogs_storage_account_name}.blob.core.windows.net/"
+  azure_bootlogs_storage_account_uri  = var.use_bootlogs_storage_account ? ( var.azure_bootlogs_sas_token != "" ? "${local.azure_bootlogs_base_uri}?${var.azure_bootlogs_sas_token}" : data.azurerm_storage_account.bootlogs[0].primary_blob_endpoint ) : ""
 }
 
 module "image" {
@@ -147,16 +149,52 @@ module "vnet" {
   dns_apps_ip               = var.apps_dns_ip
 }
 
-# module "byo_dns" {
-#   placeholder module to add custom dns logic 
-#   count = openshift_byo_dns ? 1 : 0
-#   source                    = "./byo_dns"
-#   dns_api_ip                = module.vnet.dns_api_ip_v4
-#   dns_apps_ip               = module.vnet.dns_apps_ip_v4
-#   api_record_set            = "api.${var.cluster_name}.${var.base_domain}"
-#   api-int_record_set        = "api-int.${var.cluster_name}.${var.base_domain}"
-#   apps_record_set           = "*.apps.${var.cluster_name}.${var.base_domain}"
-# }
+module "dns" {
+  count                           = !var.openshift_byo_dns && var.openshift_dns_provider == "azure" ? 1 : 0
+  source                          = "./dns"
+
+  cluster_domain                  = "${var.cluster_name}.${var.base_domain}"
+  cluster_id                      = local.cluster_id
+  base_domain                     = var.base_domain
+  virtual_network_id              = module.vnet.virtual_network_id
+  external_lb_fqdn_v4             = module.vnet.public_lb_pip_v4_fqdn
+  external_lb_fqdn_v6             = module.vnet.public_lb_pip_v6_fqdn
+  internal_lb_ipaddress_v4        = module.vnet.internal_lb_ip_v4_address
+  internal_lb_ipaddress_v6        = module.vnet.internal_lb_ip_v6_address
+  resource_group_name             = data.azurerm_resource_group.main.name
+  base_domain_resource_group_name = var.azure_base_domain_resource_group_name
+  private                         = module.vnet.private
+
+  use_ipv4                        = var.use_ipv4 || var.azure_emulate_single_stack_ipv6
+  use_ipv6                        = var.use_ipv6
+  emulate_single_stack_ipv6       = var.azure_emulate_single_stack_ipv6
+}
+
+provider "infoblox" {
+  username                        = var.infoblox_username
+  password                        = var.infoblox_password
+  server                          = var.infoblox_fqdn
+}
+
+module "infoblox_dns" {
+  count                           = var.azure_private && var.openshift_dns_provider == "infoblox" ? 1 : 0
+  source                          = "./infoblox_dns"
+
+  infoblox_fqdn                   = var.infoblox_fqdn
+  infoblox_username               = var.infoblox_username
+  infoblox_password               = var.infoblox_password
+  infoblox_allow_any              = var.infoblox_allow_any
+  infoblox_apps_dns_entries       = var.infoblox_apps_dns_entries
+  cluster_name                    = var.cluster_name
+  base_domain                     = var.base_domain
+  internal_lb_ipaddress_v4        = module.vnet.internal_lb_ip_v4_address
+  internal_lb_ipaddress_v6        = module.vnet.internal_lb_ip_v6_address
+  internal_lb_apps_ipaddress_v4   = module.vnet.internal_lb_apps_ip_v4_address
+  internal_lb_apps_ipaddress_v6   = module.vnet.internal_lb_apps_ip_v6_address
+
+  use_ipv4                        = var.use_ipv4
+  use_ipv6                        = var.use_ipv6
+}
 
 module "ignition" {
   source                        = "./ignition"
@@ -203,6 +241,7 @@ module "ignition" {
   proxy_config                  = var.proxy_config
   trust_bundle                  = var.openshift_additional_trust_bundle
   byo_dns                       = var.openshift_byo_dns
+  openshift_dns_provider        = var.openshift_dns_provider
   managed_infrastructure        = var.openshift_managed_infrastructure
   use_default_imageregistry     = var.use_default_imageregistry
   ignition_sas_token            = var.azure_ignition_sas_token
@@ -225,9 +264,7 @@ module "bootstrap" {
   ilb_backend_pool_v4_id    = module.vnet.internal_lb_backend_pool_v4_id
   ilb_backend_pool_v6_id    = module.vnet.internal_lb_backend_pool_v6_id
   tags                      = local.tags
-  bootlogs_storage_account      = data.azurerm_storage_account.bootlogs
-  bootlogs_storage_account_name = local.azure_bootlogs_storage_account_name
-  bootlogs_sas_token            = var.azure_bootlogs_sas_token
+  bootlogs_uri              = local.azure_bootlogs_storage_account_uri
   nsg_name                  = module.vnet.cluster_nsg_name
   private                   = module.vnet.private
   outbound_udr              = var.azure_outbound_user_defined_routing
@@ -257,9 +294,7 @@ module "master" {
   ilb_backend_pool_v6_id = module.vnet.internal_lb_backend_pool_v6_id
   subnet_id              = module.vnet.master_subnet_id
   instance_count         = var.master_count
-  bootlogs_storage_account      = data.azurerm_storage_account.bootlogs
-  bootlogs_storage_account_name = local.azure_bootlogs_storage_account_name
-  bootlogs_sas_token            = var.azure_bootlogs_sas_token
+  bootlogs_uri           = local.azure_bootlogs_storage_account_uri
   os_volume_type         = var.azure_master_root_volume_type
   os_volume_size         = var.azure_master_root_volume_size
   private                = module.vnet.private
@@ -295,9 +330,7 @@ module "infra" {
   ilb_backend_pool_v6_id = module.vnet.internal_lb_apps_backend_pool_v6_id
   subnet_id              = module.vnet.worker_subnet_id
   instance_count         = var.infra_count
-  bootlogs_storage_account      = data.azurerm_storage_account.bootlogs
-  bootlogs_storage_account_name = local.azure_bootlogs_storage_account_name
-  bootlogs_sas_token            = var.azure_bootlogs_sas_token
+  bootlogs_uri           = local.azure_bootlogs_storage_account_uri
   os_volume_type         = var.azure_worker_root_volume_type
   os_volume_size         = var.azure_infra_root_volume_size
   private                = module.vnet.private
@@ -334,9 +367,7 @@ module "worker" {
   ilb_backend_pool_v6_id = module.vnet.internal_lb_apps_backend_pool_v6_id
   subnet_id              = module.vnet.worker_subnet_id
   instance_count         = var.worker_count
-  bootlogs_storage_account      = data.azurerm_storage_account.bootlogs
-  bootlogs_storage_account_name = local.azure_bootlogs_storage_account_name
-  bootlogs_sas_token            = var.azure_bootlogs_sas_token
+  bootlogs_uri           = local.azure_bootlogs_storage_account_uri
   os_volume_type         = var.azure_worker_root_volume_type
   os_volume_size         = var.azure_worker_root_volume_size
   private                = module.vnet.private
@@ -384,7 +415,7 @@ data "azurerm_resource_group" "bootlogs_storage" {
 }
 
 resource "azurerm_storage_account" "bootlogs" {
-  count = var.azure_bootlogs_storage_account_name == "" ? 1 : 0
+  count = var.use_bootlogs_storage_account && var.azure_bootlogs_storage_account_name == "" ? 1 : 0
 
   name                     = "bootlogs${var.cluster_name}${random_string.cluster_id.result}"
   resource_group_name      = data.azurerm_resource_group.bootlogs_storage.name
@@ -394,7 +425,7 @@ resource "azurerm_storage_account" "bootlogs" {
 }
 
 data "azurerm_storage_account" "bootlogs" {
-  count = var.azure_bootlogs_sas_token == "" ? 1 : 0
+  count = var.use_bootlogs_storage_account && var.azure_bootlogs_sas_token == "" ? 1 : 0
 
   name                     = var.azure_bootlogs_storage_account_name != "" ? var.azure_bootlogs_storage_account_name : azurerm_storage_account.bootlogs[0].name
   resource_group_name      = data.azurerm_resource_group.bootlogs_storage.name

@@ -177,6 +177,11 @@ variable "byo_dns" {
   default = false
 }
 
+variable "openshift_dns_provider" {
+  type        = string
+  default     = "azure"
+}
+
 variable "storage_account_name" {
   type    = string
   default = ""

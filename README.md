@@ -119,6 +119,12 @@ azure_storage_account_name        = "XXXX"
 | use_default_imageregistry | Define if you want to use the default imageregistry that is created with the install | `true` | bool
 | openshift_managed_infrastructure | Define if the infrastructure is managed by openshift (IPI) | `true` | bool
 | azure_worker_root_volume_type | The type of the volume the root block device of worker nodes | Premium_LRS | string
+| openshift_dns_provider | Specify whether 'azure', 'infoblox', or '' should be used as the dns provider.  If manual or none, set to '' | azure | string
+| infoblox_fqdn | The Infoblox host fully qualified domain name or ip address | - | string
+| infoblox_username | The Infoblox credentials username | - | string
+| infoblox_password | The Infoblox credentials password | - | string
+| infoblox_allow_any | Is the Infoblox allow any policy set to default, allowing wildcard dns names" | `false` | bool
+| infoblox_apps_dns_entries | The list of openshift *.apps dns entires if wildcards are not supported by Infoblox | ["oauth-openshift","console-openshift-console","downloads-openshift-console","canary-openshift-ingress-canary","alertmanager-main-openshift-monitoring","grafana-openshift-monitoring","prometheus-k8s-openshift-monitoring","thanos-querier-openshift-monitoring"] | list(string)
 
 
 
