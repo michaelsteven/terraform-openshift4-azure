@@ -57,14 +57,16 @@ azure_storage_account_name        = "XXXX"
 | master_count                          | Number of master nodes to deploy                               | 3               | string |
 | worker_count                          | Number of worker nodes to deploy                               | 3               | string |
 | infra_count                           | Number of infra nodes to deploy                                | 0               | string |
+| infra_number_of_disks_per_node        | Number of data disk per infra node                             | 1               | string |
+| infra_data_disk_size_GB               | Size of data disk for infra node                               | 0               | string |
 | machine_v4_cidrs                      | IPv4 CIDR for OpenShift VNET                                   | \[10.0.0.0/16\] | list   |
 | machine_v6_cidrs                      | IPv6 CIDR for OpenShift VNET                                   | \[\]               | list   |
 | base_domain                           | DNS name for your deployment                                   | -               | string |
 | azure_base_domain_resource_group_name | Resource group where DNS is hosted.  Must be on zame region.   | -               | string |
 | azure_bootstrap_vm_type               | Size of bootstrap VM                                           | Standard_D4s_v3 | string |
-| azure_master_vm_type                  | Size of master node VMs                                        | Standard_D4s_v3 | string |
-| azure_infra_vm_type                   | Size of infra node VMs                                         | Standard_D4s_v3 | string |
-| azure_worker_vm_type                  | Sizs of worker node VMs                                        | Standard_D4s_v3 | string |
+| azure_master_vm_type                  | Size of master node VMs                                        | Standard_D8s_v3 | string |
+| azure_infra_vm_type                   | Size of infra node VMs                                         | Standard_D16s_v3 | string |
+| azure_worker_vm_type                  | Sizs of worker node VMs                                        | Standard_D8s_v3 | string |
 | openshift_cluster_network_cidr        | CIDR for Kubernetes pods                                       | 10.128.0.0/14   | string |
 | openshift_cluster_network_host_prefix | Detemines the number of pods a node can host.  23 gives you 510 pods per node. | 23 | string |
 | openshift_service_network_cidr        | CIDR for Kubernetes services                                   | 172.30.0.0/16   | string |

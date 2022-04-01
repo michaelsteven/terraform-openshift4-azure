@@ -249,7 +249,7 @@ variable "infra_count" {
 
 variable "azure_infra_vm_type" {
   type    = string
-  default = "Standard_D4s_v3"
+  default = "Standard_D16s_v3"
 }
 
 variable "azure_worker_vm_type" {
@@ -435,6 +435,12 @@ variable "infra_data_disk_size_GB" {
   type          = string
   description   = "Size of data disk for infra nodes" 
   default       = 0
+}
+
+variable "infra_number_of_disks_per_node" {
+  type          = string
+  description   = "Number of data disk per infra node" 
+  default       = 1
 }
 
 variable "azure_shared_image" {

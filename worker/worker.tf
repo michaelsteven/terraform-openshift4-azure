@@ -134,7 +134,7 @@ resource "azurerm_linux_virtual_machine" "worker" {
 }
 
 resource "azurerm_managed_disk" "storage" {
-  count = var.infra_data_disk_size_GB>0 ? var.instance_count : 0
+ count = var.infra_data_disk_size_GB>0 ? var.number_of_disks_per_node * var.instance_count : 0
 
   name                 = "${var.cluster_id}-infra-${count.index}-data-disk"
   location             = var.region
@@ -147,10 +147,10 @@ resource "azurerm_managed_disk" "storage" {
 }
 
 resource "azurerm_virtual_machine_data_disk_attachment" "data_disk" {
-  count = var.infra_data_disk_size_GB>0 ? var.instance_count : 0
+  count = var.infra_data_disk_size_GB>0 ? var.number_of_disks_per_node * var.instance_count : 0
 
   managed_disk_id    = azurerm_managed_disk.storage[count.index].id
-  virtual_machine_id = azurerm_linux_virtual_machine.worker[count.index].id
-  lun                = "10"
+  virtual_machine_id = azurerm_linux_virtual_machine.worker[(var.instance_count+count.index)%var.instance_count].id
+  lun                = "1${count.index}"
   caching            = "ReadWrite"
 }

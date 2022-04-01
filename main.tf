@@ -344,6 +344,7 @@ module "infra" {
   phase1_complete           = var.phase1_complete
   managed_infrastructure    = var.openshift_managed_infrastructure
   infra_data_disk_size_GB   = var.infra_data_disk_size_GB
+  number_of_disks_per_node  = var.infra_number_of_disks_per_node
 
   depends_on = [module.master]
 }
