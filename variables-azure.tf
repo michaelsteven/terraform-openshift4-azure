@@ -138,7 +138,7 @@ variable "azure_compute_subnet" {
 variable "azure_private" {
   type        = bool
   description = "This determines if this is a private cluster or not."
-  default     = false
+  default     = true
 }
 
 variable "azure_emulate_single_stack_ipv6" {
@@ -245,6 +245,10 @@ variable "worker_count" {
 variable "infra_count" {
   type    = string
   default = 0
+  validation {
+    condition     = anytrue([var.infra_count == 3, var.infra_count == 0, var.infra_count == "0"])
+    error_message = "The infra_count value must be set to 0 or 3."
+  }  
 }
 
 variable "azure_infra_vm_type" {
@@ -281,6 +285,12 @@ variable "openshift_additional_trust_bundle" {
   default     = ""
 }
 
+variable "openshift_additional_trust_bundle_string" {
+  description = "string with all your additional ca certificates"
+  type        = string
+  default     = ""
+}
+
 variable "openshift_ssh_key" {
   description = "SSH Public Key to use for OpenShift Installation"
   type        = string
@@ -290,7 +300,7 @@ variable "openshift_ssh_key" {
 variable "openshift_byo_dns" {
   description = "Do not deploy any public or private DNS zone into Azure.  Left for backward compatability, prefer to use 'openshift_dns_provider' instead"
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "openshift_dns_provider" {
@@ -445,8 +455,8 @@ variable "infra_number_of_disks_per_node" {
 
 variable "azure_shared_image" {
   type        = bool
-  description = "Identitify if the coreos image should be stored in a repository"
-  default     = false
+  description = "Identitify if the coreos image should be stored on disk"
+  default     = true
 }
 
 variable "azure_shared_image_repo_name" {

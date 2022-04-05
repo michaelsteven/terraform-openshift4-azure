@@ -96,8 +96,9 @@ azure_storage_account_name        = "XXXX"
 | proxy_config                          | Configuration for Cluster wide proxy | [AirGapped](AIRGAPPED.md)| map |
 | openshift_ssh_key | Your own SSH Public Key as a String.  If none provided it will create one for you | - | string |
 | openshift_additional_trust_bundle | Path to your trusted CA bundle in pem format | - | string |
+| openshift_additional_trust_bundle_string | Contents of the your trusted CA bundle in pem format | - | string |
 | azure_image_id | The azure image id for the coreos vm boot image | - | string |
-| azure_shared_image                    | Should the coreos image be stored in a repository | false | bool |
+| azure_shared_image                    | Should the coreos image be stored in a repository | true | bool |
 | azure_shared_image_repo_name          | If a repository is being used for the image, the name of the repository | - | string |
 | azure_shared_image_name               | If a repository is being used for the image, The name of the existing image | - | string |
 | azure_image_storage_rg | Existing Storage Account Resource Group for the VM Image | - | string |

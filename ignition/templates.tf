@@ -68,6 +68,10 @@ sshKey: '${var.public_ssh_key}'
 %{endif}
 %{if var.trust_bundle != ""}
 ${indent(2, "additionalTrustBundle: |\n${file(var.trust_bundle)}")}
+%{ else }
+%{if var.trust_bundle_string != ""}
+${indent(2, "additionalTrustBundle: |\n${var.trust_bundle_string}")}
+%{endif}
 %{endif}
 EOF
 }

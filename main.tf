@@ -240,6 +240,7 @@ module "ignition" {
   airgapped                     = var.airgapped
   proxy_config                  = var.proxy_config
   trust_bundle                  = var.openshift_additional_trust_bundle
+  trust_bundle_string           = var.openshift_additional_trust_bundle_string
   byo_dns                       = var.openshift_byo_dns
   openshift_dns_provider        = var.openshift_dns_provider
   managed_infrastructure        = var.openshift_managed_infrastructure
