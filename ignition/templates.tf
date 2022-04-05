@@ -393,7 +393,7 @@ spec:
         name: worker-user-data
       vmSize: ${var.worker_vm_type}
       vnet: ${var.virtual_network_name}
-      %{if length(var.availability_zones) > 1}zone: "${count.index%length(var.availability_zones)}"%{endif}
+      %{if length(var.availability_zones) > 1}zone: "${var.availability_zones[count.index%length(var.availability_zones)]}"%{endif}
 EOF
 }
 

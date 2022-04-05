@@ -382,7 +382,7 @@ module "worker" {
   phase1_complete           = var.phase1_complete
   managed_infrastructure    = var.openshift_managed_infrastructure
 
-  depends_on = [module.infra]
+  depends_on = [module.master]
 }
 
 resource "azurerm_resource_group" "main" {

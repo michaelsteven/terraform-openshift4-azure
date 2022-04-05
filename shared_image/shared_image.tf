@@ -71,7 +71,7 @@ data "azurerm_managed_disk" "rhcos_disk" {
 }
 
 resource "azurerm_image" "cluster" {
-  name                = "${var.cluster_name}_${var.cluster_unique_string}_image"
+  name                = "${var.cluster_name}-${var.cluster_unique_string}"
   resource_group_name = var.cluster_resource_group_name
   location            = var.region
 
