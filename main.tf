@@ -174,6 +174,8 @@ provider "infoblox" {
   username                        = var.infoblox_username
   password                        = var.infoblox_password
   server                          = var.infoblox_fqdn
+  wapi_version                    = var.infoblox_wapi_version
+  pool_connections                = var.infoblox_pool_connections
 }
 
 module "infoblox_dns" {
