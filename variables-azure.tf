@@ -513,6 +513,18 @@ variable "infoblox_password" {
   default     = ""
 }
 
+variable "infoblox_wapi_version" {
+  type        = string
+  description = "WAPI Version of Infoblox server"
+  default     = "2.5"
+}
+
+variable "infoblox_pool_connections" {
+  type        = string
+  description = "Maximum number of connections to establish to the Infoblox server."
+  default     = "16"
+}
+
 variable "infoblox_allow_any" {
   type        = bool
   description = "Is the Infoblox allow any policy set to default, allowing wildcard dns names"
