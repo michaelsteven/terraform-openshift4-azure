@@ -246,7 +246,7 @@ variable "infra_count" {
   type    = string
   default = 0
   validation {
-    condition     = anytrue([var.infra_count == 3, var.infra_count == 0, var.infra_count == "0"])
+    condition     = var.infra_count % 3 == 0 && var.infra_count <=3
     error_message = "The infra_count value must be set to 0 or 3."
   }  
 }
