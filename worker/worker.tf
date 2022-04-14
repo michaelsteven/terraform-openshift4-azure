@@ -139,7 +139,7 @@ resource "azurerm_managed_disk" "storage" {
   name                 = "${var.cluster_id}-infra-${count.index}-data-disk"
   location             = var.region
   resource_group_name  = var.resource_group_name
-  storage_account_type = "Standard_LRS"
+  storage_account_type = "StandardSSD_LRS"
   create_option        = "Empty"
   disk_size_gb         = var.infra_data_disk_size_GB
   zones                = [length(var.availability_zones) > 1 ? var.availability_zones[count.index % length(var.availability_zones)] : var.availability_zones[0]]
