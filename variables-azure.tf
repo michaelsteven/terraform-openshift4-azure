@@ -65,21 +65,25 @@ variable "azure_base_domain_resource_group_name" {
 variable "azure_subscription_id" {
   type        = string
   description = "The subscription that should be used to interact with Azure API"
+  default     = ""
 }
 
 variable "azure_client_id" {
   type        = string
   description = "The app ID that should be used to interact with Azure API"
+  default     = ""
 }
 
 variable "azure_client_secret" {
   type        = string
   description = "The password that should be used to interact with Azure API"
+  default     = ""
 }
 
 variable "azure_tenant_id" {
   type        = string
   description = "The tenant ID that should be used to interact with Azure API"
+  default     = ""
 }
 
 variable "azure_master_availability_zones" {
