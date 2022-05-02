@@ -47,9 +47,6 @@ platform:
     controlPlaneSubnet: ${var.control_plane_subnet}
     computeSubnet: ${var.compute_subnet}
     outboundType: ${var.outbound_udr ? "UserDefinedRouting" : "Loadbalancer"}
-    osDisk:
-      diskSizeGB: ${var.worker_os_disk_size}
-      diskType: Premium_LRS
 publish: ${var.private ? "Internal" : "External"}
 pullSecret: %{if (var.openshift_pull_secret_string != "")}'${var.openshift_pull_secret_string}' %{ else } '${chomp(file(var.openshift_pull_secret))}'%{endif}
 sshKey: '${var.public_ssh_key}'
