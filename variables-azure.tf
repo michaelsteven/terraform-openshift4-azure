@@ -429,6 +429,30 @@ variable "openshift_managed_infrastructure" {
   default     = false  
 }
 
+variable "azure_network_introspection" {
+  description = "If the network is pre-defined, retrieve the network components via the subscription dynamically"
+  type        = bool
+  default     = false 
+}
+
+variable "azure_resource_group_name_substring" {
+  description = "Azure Resource Group Name filter using the provided substring for dynamically populating the resource group name"
+  type        = string
+  default     = ""
+}
+
+variable "azure_control_plane_subnet_substring" {
+  description = "Azure Subnet Name filter using the provided substring for dynamically populating the control plane subnet"
+  type        = string
+  default     = ""
+}
+
+variable "azure_compute_subnet_substring" {
+  description = "Azure Subnet Name filter using the provided substring for dynamically populating the compute subnet"
+  type        = string
+  default     = ""
+}
+
 variable "azure_worker_root_volume_type" {
   type        = string
   description = "The type of the volume the root block device of worker nodes."

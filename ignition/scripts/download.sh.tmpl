@@ -1,35 +1,9 @@
 #!/bin/bash
 
-test -e ${installer_workspace} || mkdir -p ${installer_workspace}
-
 if  [[ "${proxy_eval}" == "true" ]]; then 
     export no_proxy=mirror.openshift.com;
 fi
 
-case $(uname -s) in
-  Darwin)
-    wget -r -l1 -np -nd -q ${installer_url} -P ${installer_workspace} -A 'openshift-install-mac-4*.tar.gz'
-    tar zxvf ${installer_workspace}/openshift-install-mac-4*.tar.gz -C ${installer_workspace}
-    wget -r -l1 -np -nd -q ${installer_url} -P ${installer_workspace} -A 'openshift-client-mac-4*.tar.gz'
-    tar zxvf ${installer_workspace}/openshift-client-mac-4*.tar.gz -C ${installer_workspace}
-    wget https://github.com/stedolan/jq/releases/download/jq-1.6/jq-osx-amd64 -O ${installer_workspace}/jq > /dev/null 2>&1
-    curl -L https://aka.ms/downloadazcopy-v10-mac  -o ${installer_workspace}/downloadazcopy-v10-mac.zip
-    unzip -j -d ${installer_workspace} ${installer_workspace}/downloadazcopy-v10-mac.zip */azcopy
-    ;;
-  Linux)
-    wget -r -l1 -np -nd -q ${installer_url}openshift-install-linux-${openshift_version}.tar.gz -P ${installer_workspace} 
-    tar zxvf ${installer_workspace}openshift-install-linux-4*.tar.gz -C ${installer_workspace}
-    wget -r -l1 -np -nd -q ${installer_url}openshift-client-linux-${openshift_version}.tar.gz -P ${installer_workspace}
-    tar zxvf ${installer_workspace}openshift-client-linux-4*.tar.gz -C ${installer_workspace}
-    wget https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 -O ${installer_workspace}/jq
-    curl -L https://aka.ms/downloadazcopy-v10-linux -o ${installer_workspace}/downloadazcopy-v10-linux
-    tar zxvf ${installer_workspace}downloadazcopy-v10-linux -C ${installer_workspace} --wildcards *azcopy --strip-components 1
-    ;;
-  *)
-    exit 1;;
-esac
-chmod u+x ${installer_workspace}jq
-rm -f ${installer_workspace}*.tar.gz ${installer_workspace}robots*.txt* ${installer_workspace}README.md
 if [ "${airgapped_enabled}" = "true" ]; then
   ${installer_workspace}oc adm release extract -a ${pull_secret} --command=openshift-install ${airgapped_repository}:${openshift_version}-x86_64
   mv ${path_root}/openshift-install ${installer_workspace}

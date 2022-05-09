@@ -125,6 +125,10 @@ azure_storage_account_name        = "XXXX"
 | infoblox_password | The Infoblox credentials password | - | string
 | infoblox_allow_any | Is the Infoblox allow any policy set to default, allowing wildcard dns names" | `false` | bool
 | infoblox_apps_dns_entries | The list of openshift *.apps dns entires if wildcards are not supported by Infoblox | ["oauth-openshift","console-openshift-console","downloads-openshift-console","canary-openshift-ingress-canary","alertmanager-main-openshift-monitoring","grafana-openshift-monitoring","prometheus-k8s-openshift-monitoring","thanos-querier-openshift-monitoring"] | list(string)
+| azure_network_introspection | If the network is pre-defined, retrieve the network components via the subscription dynamically | `false` | bool
+| azure_resource_group_name_substring | Azure Resource Group Name filter using the provided substring for dynamically populating the resource group name | - | string
+| azure_control_plane_subnet_substring | Azure Subnet Name filter using the provided substring for dynamically populating the control plane subnet | - | string
+| azure_compute_subnet_substring | Azure Subnet Name filter using the provided substring for dynamically populating the compute subnet | - | string
 
 
 

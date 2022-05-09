@@ -18,6 +18,7 @@ resource "null_resource" "installer_workspace" {
     interpreter = ["/bin/bash"]
     environment = {
       INSTALLER_WORKSPACE = self.triggers.installer_workspace
+      OPENSHIFT_VERSION = var.openshift_version
     }
   }
 
@@ -82,6 +83,22 @@ resource "local_file" "azure_sp_json" {
   filename = pathexpand("~/.azure/osServicePrincipal.json")
 }
 
+data "external" "get_network_configuration" {
+  count = var.azure_preexisting_network && var.azure_network_introspection ? 1 : 0
+
+  program = ["bash", "${path.root}/scripts/get_network_config.sh" ]
+  query = {
+    installer_workspace = local.installer_workspace
+    azure_subscription_id = local.azure_subscription_id
+    azure_tenent_id = local.azure_tenant_id
+    azure_client_id = local.azure_client_id
+    azure_client_secret = local.azure_client_secret
+    azure_resource_group_name_substring = var.azure_resource_group_name_substring
+    azure_control_plane_subnet_substring = var.azure_control_plane_subnet_substring
+    azure_compute_subnet_substring = var.azure_compute_subnet_substring
+  }
+}
+
 locals {
   cluster_id = "${var.cluster_name}-${random_string.cluster_id.result}"
   tags = merge(
@@ -90,10 +107,10 @@ locals {
     },
     var.azure_extra_tags,
   )
-  azure_network_resource_group_name   = (var.azure_preexisting_network && var.azure_network_resource_group_name != null) ? var.azure_network_resource_group_name : data.azurerm_resource_group.main.name
-  azure_virtual_network               = (var.azure_preexisting_network && var.azure_virtual_network != null) ? var.azure_virtual_network : "${local.cluster_id}-vnet"
-  azure_control_plane_subnet          = (var.azure_preexisting_network && var.azure_control_plane_subnet != null) ? var.azure_control_plane_subnet : "${local.cluster_id}-master-subnet"
-  azure_compute_subnet                = (var.azure_preexisting_network && var.azure_compute_subnet != null) ? var.azure_compute_subnet : "${local.cluster_id}-worker-subnet"
+  azure_network_resource_group_name   = var.azure_preexisting_network ? (var.azure_network_introspection ? data.external.get_network_configuration[0].result.resource_group_name : (var.azure_network_resource_group_name != null ? var.azure_network_resource_group_name : data.azurerm_resource_group.main.name)) : data.azurerm_resource_group.main.name
+  azure_virtual_network               = var.azure_preexisting_network ? (var.azure_network_introspection ? data.external.get_network_configuration[0].result.virtual_network : (var.azure_virtual_network != null ? var.azure_virtual_network : "${local.cluster_id}-vnet")) : "${local.cluster_id}-vnet"
+  azure_control_plane_subnet          = var.azure_preexisting_network ? (var.azure_network_introspection ? data.external.get_network_configuration[0].result.control_plane_subnet : (var.azure_control_plane_subnet != null ? var.azure_control_plane_subnet : "${local.cluster_id}-master-subnet")) : "${local.cluster_id}-master-subnet"
+  azure_compute_subnet                = var.azure_preexisting_network ? (var.azure_network_introspection ? data.external.get_network_configuration[0].result.compute_subnet : (var.azure_compute_subnet != null ? var.azure_compute_subnet : "${local.cluster_id}-worker-subnet")) : "${local.cluster_id}-worker-subnet"
   public_ssh_key                      = var.openshift_ssh_key == "" ? tls_private_key.installkey[0].public_key_openssh : var.openshift_ssh_key
   major_version                       = join(".", slice(split(".", var.openshift_version), 0, 2))
   installer_workspace                 = "${path.cwd}/installer-files/"

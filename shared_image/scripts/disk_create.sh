@@ -7,9 +7,6 @@ source "$scripts_dir/disk_functions.sh"
 
 max_retries=6
 
-install_deps
-if [[ $? -ne 0 ]]; then exit 1; fi
-
 BEARER_TOKEN=$(get_bearer_token)
 if [[ -z "${BEARER_TOKEN}" ]]; then exit 1; fi
 

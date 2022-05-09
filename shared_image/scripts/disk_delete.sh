@@ -5,9 +5,6 @@ if [[ "${BASH_DEBUG}" == "true" || "${TF_LOG}" == "TRACE" || "${TF_LOG}" == "DEB
 scripts_dir="$(dirname "$0")"
 source "$scripts_dir/disk_functions.sh"
 
-install_deps
-if [[ $? -ne 0 ]]; then exit 1; fi
-
 BEARER_TOKEN=$(get_bearer_token)
 if [[ -z "${BEARER_TOKEN}" ]]; then exit 1; fi
 
