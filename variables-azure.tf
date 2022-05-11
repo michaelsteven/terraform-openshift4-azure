@@ -142,7 +142,7 @@ variable "azure_compute_subnet" {
 variable "azure_private" {
   type        = bool
   description = "This determines if this is a private cluster or not."
-  default     = false
+  default     = true
 }
 
 variable "azure_emulate_single_stack_ipv6" {
@@ -208,6 +208,11 @@ variable "use_ipv6" {
   default = false
 }
 
+variable "openshift_installer_url" {
+  type    = string
+  default = "https://mirror.openshift.com/pub/openshift-v4/clients/ocp"
+}
+
 variable "openshift_version" {
   type    = string
   default = "4.6.31"
@@ -249,11 +254,15 @@ variable "worker_count" {
 variable "infra_count" {
   type    = string
   default = 0
+  validation {
+    condition     = var.infra_count % 3 == 0 && var.infra_count <=3
+    error_message = "The infra_count value must be set to 0 or 3."
+  }  
 }
 
 variable "azure_infra_vm_type" {
   type    = string
-  default = "Standard_D4s_v3"
+  default = "Standard_D16s_v3"
 }
 
 variable "azure_worker_vm_type" {
@@ -285,6 +294,12 @@ variable "openshift_additional_trust_bundle" {
   default     = ""
 }
 
+variable "openshift_additional_trust_bundle_string" {
+  description = "string with all your additional ca certificates"
+  type        = string
+  default     = ""
+}
+
 variable "openshift_ssh_key" {
   description = "SSH Public Key to use for OpenShift Installation"
   type        = string
@@ -294,7 +309,7 @@ variable "openshift_ssh_key" {
 variable "openshift_byo_dns" {
   description = "Do not deploy any public or private DNS zone into Azure.  Left for backward compatability, prefer to use 'openshift_dns_provider' instead"
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "openshift_dns_provider" {
@@ -465,10 +480,16 @@ variable "infra_data_disk_size_GB" {
   default       = 0
 }
 
+variable "infra_number_of_disks_per_node" {
+  type          = string
+  description   = "Number of data disk per infra node" 
+  default       = 1
+}
+
 variable "azure_shared_image" {
   type        = bool
-  description = "Identitify if the coreos image should be stored in a repository"
-  default     = false
+  description = "Identitify if the coreos image should be stored on disk"
+  default     = true
 }
 
 variable "azure_shared_image_repo_name" {

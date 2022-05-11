@@ -69,14 +69,14 @@ resource "null_resource" "download_binaries" {
   provisioner "local-exec" {
     when = create
     command = templatefile("${path.module}/scripts/download.sh.tmpl", {
-      installer_workspace  = local.installer_workspace
-      installer_url        = local.openshift_installer_url
-      airgapped_enabled    = var.airgapped["enabled"]
-      airgapped_repository = var.airgapped["repository"]
-      pull_secret          = var.openshift_pull_secret
-      openshift_version    = var.openshift_version
-      path_root            = path.root
-      proxy_eval           = var.proxy_eval
+      INSTALLER_WORKSPACE     = local.installer_workspace
+      OPENSHIFT_INSTALLER_URL = local.openshift_installer_url
+      OPENSHIFT_VERSION       = var.openshift_version
+      AIRGAPPED_ENABLED       = var.airgapped["enabled"]
+      AIRGAPPED_REPOSITORY    = var.airgapped["repository"]
+      PULL_SECRET             = var.openshift_pull_secret
+      PATH_ROOT               = path.root
+      PROXY_EVAL              = var.proxy_eval
     })
   }
 }

@@ -172,6 +172,11 @@ variable "trust_bundle" {
   default = ""
 }
 
+variable "trust_bundle_string" {
+  type    = string
+  default = ""
+}
+
 variable "byo_dns" {
   type    = bool
   default = false

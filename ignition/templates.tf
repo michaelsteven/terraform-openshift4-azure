@@ -47,9 +47,6 @@ platform:
     controlPlaneSubnet: ${var.control_plane_subnet}
     computeSubnet: ${var.compute_subnet}
     outboundType: ${var.outbound_udr ? "UserDefinedRouting" : "Loadbalancer"}
-    osDisk:
-      diskSizeGB: ${var.worker_os_disk_size}
-      diskType: Premium_LRS
 publish: ${var.private ? "Internal" : "External"}
 pullSecret: %{if (var.openshift_pull_secret_string != "")}'${var.openshift_pull_secret_string}' %{ else } '${chomp(file(var.openshift_pull_secret))}'%{endif}
 sshKey: '${var.public_ssh_key}'
@@ -68,6 +65,10 @@ sshKey: '${var.public_ssh_key}'
 %{endif}
 %{if var.trust_bundle != ""}
 ${indent(2, "additionalTrustBundle: |\n${file(var.trust_bundle)}")}
+%{ else }
+%{if var.trust_bundle_string != ""}
+${indent(2, "additionalTrustBundle: |\n${var.trust_bundle_string}")}
+%{endif}
 %{endif}
 EOF
 }
@@ -393,7 +394,7 @@ spec:
         name: worker-user-data
       vmSize: ${var.worker_vm_type}
       vnet: ${var.virtual_network_name}
-      %{if length(var.availability_zones) > 1}zone: "${count.index%length(var.availability_zones)}"%{endif}
+      %{if length(var.availability_zones) > 1}zone: "${var.availability_zones[count.index%length(var.availability_zones)]}"%{endif}
 EOF
 }
 

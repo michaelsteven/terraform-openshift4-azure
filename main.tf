@@ -18,6 +18,7 @@ resource "null_resource" "installer_workspace" {
     interpreter = ["/bin/bash"]
     environment = {
       INSTALLER_WORKSPACE = self.triggers.installer_workspace
+      OPENSHIFT_INSTALLER_URL = var.openshift_installer_url
       OPENSHIFT_VERSION = var.openshift_version
     }
   }
@@ -146,6 +147,7 @@ module "shared_image" {
   source                            = "./shared_image"
   depends_on                        = [null_resource.installer_workspace]
 
+  openshift_installer_url           = var.openshift_installer_url
   openshift_version                 = var.openshift_version
   subscription_id                   = local.azure_subscription_id
   tenant_id                         = local.azure_tenant_id
@@ -279,6 +281,7 @@ module "ignition" {
   airgapped                     = var.airgapped
   proxy_config                  = var.proxy_config
   trust_bundle                  = var.openshift_additional_trust_bundle
+  trust_bundle_string           = var.openshift_additional_trust_bundle_string
   byo_dns                       = var.openshift_byo_dns
   openshift_dns_provider        = var.openshift_dns_provider
   managed_infrastructure        = var.openshift_managed_infrastructure
@@ -383,6 +386,7 @@ module "infra" {
   phase1_complete           = var.phase1_complete
   managed_infrastructure    = var.openshift_managed_infrastructure
   infra_data_disk_size_GB   = var.infra_data_disk_size_GB
+  number_of_disks_per_node  = var.infra_number_of_disks_per_node
 
   depends_on = [module.master]
 }
@@ -420,7 +424,7 @@ module "worker" {
   phase1_complete           = var.phase1_complete
   managed_infrastructure    = var.openshift_managed_infrastructure
 
-  depends_on = [module.infra]
+  depends_on = [module.master]
 }
 
 resource "azurerm_resource_group" "main" {

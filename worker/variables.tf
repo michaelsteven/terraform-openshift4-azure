@@ -154,3 +154,9 @@ variable "infra_data_disk_size_GB" {
   description   = "Size of data disk for infra nodes" 
   default       = 0
 }
+
+variable "number_of_disks_per_node" {
+  type          = string
+  description   = "Number of data disk per infra node" 
+  default       = 0
+}

@@ -72,3 +72,8 @@ variable "proxy_eval" {
   description = "Turn on/off proxy evaluation for testing"
   default     = false  
 }
+
+variable "openshift_installer_url" {
+  type    = string
+  default = ""
+}
