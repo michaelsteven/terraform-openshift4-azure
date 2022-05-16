@@ -22,8 +22,8 @@ resource "null_resource" "env_setup" {
     interpreter = ["/bin/bash"]
     environment = {
       INSTALLER_WORKSPACE = local.installer_workspace
-      OCP_URL = local.openshift_installer_url
-      openshift_version = var.openshift_version
+      OPENSHIFT_INSTALLER_URL = local.openshift_installer_url
+      OPENSHIFT_VERSION = var.openshift_version
     }
   }
 }

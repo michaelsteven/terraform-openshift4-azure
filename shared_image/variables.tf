@@ -75,5 +75,5 @@ variable "proxy_eval" {
 
 variable "openshift_installer_url" {
   type    = string
-  default = "https://mirror.openshift.com/pub/openshift-v4/clients/ocp"
+  default = ""
 }

@@ -1,8 +1,5 @@
 #!/bin/bash
-
-if  [[ "${PROXY_EVAL}" == "true" ]]; then 
-    export no_proxy=mirror.openshift.com;
-fi
+set -e
 
 function install_openshift_installer() {
   if [[ ! -f ${INSTALLER_WORKSPACE}openshift-install ]]; then
@@ -19,6 +16,26 @@ function install_openshift_installer() {
         exit 1;;
     esac
     chmod u+x ${INSTALLER_WORKSPACE}openshift-install
+    rm -f ${INSTALLER_WORKSPACE}*.tar.gz ${INSTALLER_WORKSPACE}README.md
+  fi
+}
+
+function install_openshift_client() {
+  if [[ ! -f ${INSTALLER_WORKSPACE}oc ]]; then
+    case $(uname -s) in
+      Darwin)
+        wget -r -l1 -np -nd -q '${OPENSHIFT_INSTALLER_URL}/${OPENSHIFT_VERSION}/' -P ${INSTALLER_WORKSPACE} -A 'openshift-client-mac-4*.tar.gz'
+        tar zxvf ${INSTALLER_WORKSPACE}/openshift-client-mac-4*.tar.gz -C ${INSTALLER_WORKSPACE}
+        ;;
+      Linux)
+        wget -r -l1 -np -nd -q ${OPENSHIFT_INSTALLER_URL}/${OPENSHIFT_VERSION}/openshift-client-linux-${OPENSHIFT_VERSION}.tar.gz -P ${INSTALLER_WORKSPACE}
+        tar zxvf ${INSTALLER_WORKSPACE}openshift-client-linux-4*.tar.gz -C ${INSTALLER_WORKSPACE}
+        ;;
+      *)
+        exit 1;;
+    esac
+    chmod u+x ${INSTALLER_WORKSPACE}oc
+    chmod u+x ${INSTALLER_WORKSPACE}kubectl
     rm -f ${INSTALLER_WORKSPACE}*.tar.gz ${INSTALLER_WORKSPACE}README.md
   fi
 }
@@ -64,15 +81,13 @@ test -e ${INSTALLER_WORKSPACE} || mkdir -p ${INSTALLER_WORKSPACE}
 install_openshift_installer
 if [[ $? -ne 0 ]]; then exit 1; fi
 
+install_openshift_client
+if [[ $? -ne 0 ]]; then exit 1; fi
+
 install_jq
 if [[ $? -ne 0 ]]; then exit 1; fi
 
 install_azcopy
 if [[ $? -ne 0 ]]; then exit 1; fi
-
-#if [ "${AIRGAPPED_ENABLED}" = "true" ]; then
-#  ${INSTALLER_WORKSPACE}oc adm release extract -a ${PULL_SECRET} --command=openshift-install ${AIRGAPPED_REPOSITORY}:${OPENSHIFT_VERSION}-x86_64
-#  mv ${PATH_ROOT}/openshift-install ${INSTALLER_WORKSPACE}
-#fi
 
 exit 0

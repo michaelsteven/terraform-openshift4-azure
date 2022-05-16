@@ -1,16 +1,10 @@
 provider "azurerm" {
   features {}
-  subscription_id = var.azure_subscription_id
-  client_id       = var.azure_client_id
-  client_secret   = var.azure_client_secret
-  tenant_id       = var.azure_tenant_id
+  #subscription_id = var.azure_subscription_id
+  #client_id       = var.azure_client_id
+  #client_secret   = var.azure_client_secret
+  #tenant_id       = var.azure_tenant_id
   environment     = var.azure_environment
-}
-
-resource "random_string" "cluster_id" {
-  length  = 5
-  special = false
-  upper   = false
 }
 
 resource "null_resource" "installer_workspace" {
@@ -20,7 +14,13 @@ resource "null_resource" "installer_workspace" {
 
   provisioner "local-exec" {
     when = create
-    command = "test -e ${self.triggers.installer_workspace} || mkdir -p ${self.triggers.installer_workspace}"
+    command = "${path.root}/scripts/installer_workspace.sh"
+    interpreter = ["/bin/bash"]
+    environment = {
+      INSTALLER_WORKSPACE = self.triggers.installer_workspace
+      OPENSHIFT_INSTALLER_URL = var.openshift_installer_url
+      OPENSHIFT_VERSION = var.openshift_version
+    }
   }
 
   provisioner "local-exec" {
@@ -28,6 +28,24 @@ resource "null_resource" "installer_workspace" {
     command = "rm -rf ${self.triggers.installer_workspace}"
   }
 
+}
+
+data "azurerm_client_config" "current" {
+}
+
+data "external" "get_azure_client_secret" {
+  depends_on = [null_resource.installer_workspace]
+
+  program = ["bash", "${path.root}/scripts/get_client_secret.sh" ]
+  query = {
+    installer_workspace = local.installer_workspace
+  }
+}
+
+resource "random_string" "cluster_id" {
+  length  = 5
+  special = false
+  upper   = false
 }
 
 # SSH Key for VMs
@@ -53,10 +71,10 @@ resource "local_file" "write_public_key" {
 data "template_file" "azure_sp_json" {
   template = <<EOF
 {
-  "subscriptionId":"${var.azure_subscription_id}",
-  "clientId":"${var.azure_client_id}",
-  "clientSecret":"${var.azure_client_secret}",
-  "tenantId":"${var.azure_tenant_id}"
+  "subscriptionId":"${local.azure_subscription_id}",
+  "clientId":"${local.azure_client_id}",
+  "clientSecret":"${local.azure_client_secret}",
+  "tenantId":"${local.azure_tenant_id}"
 }
 EOF
 }
@@ -64,6 +82,22 @@ EOF
 resource "local_file" "azure_sp_json" {
   content  = data.template_file.azure_sp_json.rendered
   filename = pathexpand("~/.azure/osServicePrincipal.json")
+}
+
+data "external" "get_network_configuration" {
+  count = var.azure_preexisting_network && var.azure_network_introspection ? 1 : 0
+
+  program = ["bash", "${path.root}/scripts/get_network_config.sh" ]
+  query = {
+    installer_workspace = local.installer_workspace
+    azure_subscription_id = local.azure_subscription_id
+    azure_tenent_id = local.azure_tenant_id
+    azure_client_id = local.azure_client_id
+    azure_client_secret = local.azure_client_secret
+    azure_resource_group_name_substring = var.azure_resource_group_name_substring
+    azure_control_plane_subnet_substring = var.azure_control_plane_subnet_substring
+    azure_compute_subnet_substring = var.azure_compute_subnet_substring
+  }
 }
 
 locals {
@@ -74,17 +108,21 @@ locals {
     },
     var.azure_extra_tags,
   )
-  azure_network_resource_group_name   = (var.azure_preexisting_network && var.azure_network_resource_group_name != null) ? var.azure_network_resource_group_name : data.azurerm_resource_group.main.name
-  azure_virtual_network               = (var.azure_preexisting_network && var.azure_virtual_network != null) ? var.azure_virtual_network : "${local.cluster_id}-vnet"
-  azure_control_plane_subnet          = (var.azure_preexisting_network && var.azure_control_plane_subnet != null) ? var.azure_control_plane_subnet : "${local.cluster_id}-master-subnet"
-  azure_compute_subnet                = (var.azure_preexisting_network && var.azure_compute_subnet != null) ? var.azure_compute_subnet : "${local.cluster_id}-worker-subnet"
+  azure_network_resource_group_name   = var.azure_preexisting_network ? (var.azure_network_introspection ? data.external.get_network_configuration[0].result.resource_group_name : (var.azure_network_resource_group_name != null ? var.azure_network_resource_group_name : data.azurerm_resource_group.main.name)) : data.azurerm_resource_group.main.name
+  azure_virtual_network               = var.azure_preexisting_network ? (var.azure_network_introspection ? data.external.get_network_configuration[0].result.virtual_network : (var.azure_virtual_network != null ? var.azure_virtual_network : "${local.cluster_id}-vnet")) : "${local.cluster_id}-vnet"
+  azure_control_plane_subnet          = var.azure_preexisting_network ? (var.azure_network_introspection ? data.external.get_network_configuration[0].result.control_plane_subnet : (var.azure_control_plane_subnet != null ? var.azure_control_plane_subnet : "${local.cluster_id}-master-subnet")) : "${local.cluster_id}-master-subnet"
+  azure_compute_subnet                = var.azure_preexisting_network ? (var.azure_network_introspection ? data.external.get_network_configuration[0].result.compute_subnet : (var.azure_compute_subnet != null ? var.azure_compute_subnet : "${local.cluster_id}-worker-subnet")) : "${local.cluster_id}-worker-subnet"
   public_ssh_key                      = var.openshift_ssh_key == "" ? tls_private_key.installkey[0].public_key_openssh : var.openshift_ssh_key
   major_version                       = join(".", slice(split(".", var.openshift_version), 0, 2))
-  installer_workspace                 = "${path.root}/installer-files/"
+  installer_workspace                 = "${path.cwd}/installer-files/"
   azure_image_id                      = var.azure_image_id != "" ? var.azure_image_id : (var.azure_shared_image ? module.shared_image[0].shared_image_id : module.image[0].image_cluster_id)
   azure_bootlogs_storage_account_name = var.use_bootlogs_storage_account ? ( var.azure_bootlogs_sas_token != "" ? var.azure_bootlogs_storage_account_name : data.azurerm_storage_account.bootlogs[0].name ) : ""
   azure_bootlogs_base_uri             = "https://${local.azure_bootlogs_storage_account_name}.blob.core.windows.net/"
   azure_bootlogs_storage_account_uri  = var.use_bootlogs_storage_account ? ( var.azure_bootlogs_sas_token != "" ? "${local.azure_bootlogs_base_uri}?${var.azure_bootlogs_sas_token}" : data.azurerm_storage_account.bootlogs[0].primary_blob_endpoint ) : ""
+  azure_subscription_id               = var.azure_subscription_id != "" ? var.azure_subscription_id : data.azurerm_client_config.current.subscription_id
+  azure_tenant_id                     = var.azure_tenant_id != "" ? var.azure_tenant_id : data.azurerm_client_config.current.tenant_id
+  azure_client_id                     = var.azure_client_id != "" ? var.azure_client_id : data.azurerm_client_config.current.client_id
+  azure_client_secret                 = var.azure_client_secret != "" ? var.azure_client_secret : data.external.get_azure_client_secret.result.client_secret
 }
 
 module "image" {
@@ -109,11 +147,12 @@ module "shared_image" {
   source                            = "./shared_image"
   depends_on                        = [null_resource.installer_workspace]
 
+  openshift_installer_url           = var.openshift_installer_url
   openshift_version                 = var.openshift_version
-  subscription_id                   = var.azure_subscription_id
-  tenant_id                         = var.azure_tenant_id
-  client_id                         = var.azure_client_id
-  client_secret                     = var.azure_client_secret
+  subscription_id                   = local.azure_subscription_id
+  tenant_id                         = local.azure_tenant_id
+  client_id                         = local.azure_client_id
+  client_secret                     = local.azure_client_secret
   cluster_name                      = var.cluster_name
   cluster_unique_string             = random_string.cluster_id.result
   cluster_resource_group_name       = data.azurerm_resource_group.main.name
@@ -228,10 +267,10 @@ module "ignition" {
   worker_os_disk_size           = var.azure_worker_root_volume_size
   infra_os_disk_size            = var.azure_infra_root_volume_size
   master_os_disk_size           = var.azure_master_root_volume_size
-  azure_subscription_id         = var.azure_subscription_id
-  azure_client_id               = var.azure_client_id
-  azure_client_secret           = var.azure_client_secret
-  azure_tenant_id               = var.azure_tenant_id
+  azure_subscription_id         = local.azure_subscription_id
+  azure_client_id               = local.azure_client_id
+  azure_client_secret           = local.azure_client_secret
+  azure_tenant_id               = local.azure_tenant_id
   azure_rhcos_image_id          = local.azure_image_id
   virtual_network_name          = local.azure_virtual_network
   network_resource_group_name   = local.azure_network_resource_group_name

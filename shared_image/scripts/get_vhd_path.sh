@@ -1,7 +1,8 @@
 #!/bin/bash
 set -e
 
-eval "$(./installer-files/jq -r '@sh "INSTALLER_WORKSPACE=\(.installer_workspace)"')"
+STD_IN=$(</dev/stdin)
+INSTALLER_WORKSPACE=$(echo ${STD_IN} | grep -oP '"installer_workspace":"\K[^"]+')
   
 VHD_URL=$(${INSTALLER_WORKSPACE}/openshift-install coreos print-stream-json | ${INSTALLER_WORKSPACE}/jq -r '.architectures.x86_64."rhel-coreos-extensions"."azure-disk".url')
 

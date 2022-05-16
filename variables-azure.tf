@@ -65,21 +65,25 @@ variable "azure_base_domain_resource_group_name" {
 variable "azure_subscription_id" {
   type        = string
   description = "The subscription that should be used to interact with Azure API"
+  default     = ""
 }
 
 variable "azure_client_id" {
   type        = string
   description = "The app ID that should be used to interact with Azure API"
+  default     = ""
 }
 
 variable "azure_client_secret" {
   type        = string
   description = "The password that should be used to interact with Azure API"
+  default     = ""
 }
 
 variable "azure_tenant_id" {
   type        = string
   description = "The tenant ID that should be used to interact with Azure API"
+  default     = ""
 }
 
 variable "azure_master_availability_zones" {
@@ -202,6 +206,11 @@ variable "use_ipv4" {
 variable "use_ipv6" {
   type    = bool
   default = false
+}
+
+variable "openshift_installer_url" {
+  type    = string
+  default = "https://mirror.openshift.com/pub/openshift-v4/clients/ocp"
 }
 
 variable "openshift_version" {
@@ -433,6 +442,30 @@ variable "openshift_managed_infrastructure" {
   description = "Define if the infrastructure is managed by openshift"
   type        = bool
   default     = false  
+}
+
+variable "azure_network_introspection" {
+  description = "If the network is pre-defined, retrieve the network components via the subscription dynamically"
+  type        = bool
+  default     = false 
+}
+
+variable "azure_resource_group_name_substring" {
+  description = "Azure Resource Group Name filter using the provided substring for dynamically populating the resource group name"
+  type        = string
+  default     = ""
+}
+
+variable "azure_control_plane_subnet_substring" {
+  description = "Azure Subnet Name filter using the provided substring for dynamically populating the control plane subnet"
+  type        = string
+  default     = ""
+}
+
+variable "azure_compute_subnet_substring" {
+  description = "Azure Subnet Name filter using the provided substring for dynamically populating the compute subnet"
+  type        = string
+  default     = ""
 }
 
 variable "azure_worker_root_volume_type" {
