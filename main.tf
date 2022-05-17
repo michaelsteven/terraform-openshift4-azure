@@ -1,9 +1,11 @@
 provider "azurerm" {
   features {}
+  # comment this out if using ARM environment variables for authentication
   #subscription_id = var.azure_subscription_id
   #client_id       = var.azure_client_id
   #client_secret   = var.azure_client_secret
   #tenant_id       = var.azure_tenant_id
+  ####
   environment     = var.azure_environment
 }
 
@@ -112,6 +114,7 @@ locals {
   azure_virtual_network               = var.azure_preexisting_network ? (var.azure_network_introspection ? data.external.get_network_configuration[0].result.virtual_network : (var.azure_virtual_network != null ? var.azure_virtual_network : "${local.cluster_id}-vnet")) : "${local.cluster_id}-vnet"
   azure_control_plane_subnet          = var.azure_preexisting_network ? (var.azure_network_introspection ? data.external.get_network_configuration[0].result.control_plane_subnet : (var.azure_control_plane_subnet != null ? var.azure_control_plane_subnet : "${local.cluster_id}-master-subnet")) : "${local.cluster_id}-master-subnet"
   azure_compute_subnet                = var.azure_preexisting_network ? (var.azure_network_introspection ? data.external.get_network_configuration[0].result.compute_subnet : (var.azure_compute_subnet != null ? var.azure_compute_subnet : "${local.cluster_id}-worker-subnet")) : "${local.cluster_id}-worker-subnet"
+  machine_v4_cidrs                    = var.azure_network_introspection ? tolist(["${data.external.get_network_configuration[0].result.virtual_network_cidr}"]) : var.machine_v4_cidrs
   public_ssh_key                      = var.openshift_ssh_key == "" ? tls_private_key.installkey[0].public_key_openssh : var.openshift_ssh_key
   major_version                       = join(".", slice(split(".", var.openshift_version), 0, 2))
   installer_workspace                 = "${path.cwd}/installer-files/"
@@ -167,7 +170,7 @@ module "shared_image" {
 module "vnet" {
   source              = "./vnet"
   resource_group_name = data.azurerm_resource_group.main.name
-  vnet_v4_cidrs       = var.machine_v4_cidrs
+  vnet_v4_cidrs       = local.machine_v4_cidrs
   vnet_v6_cidrs       = var.machine_v6_cidrs
   cluster_id          = local.cluster_id
   region              = var.azure_region
@@ -247,7 +250,7 @@ module "ignition" {
   cluster_unique_string         = random_string.cluster_id.result
   cluster_network_cidr          = var.openshift_cluster_network_cidr
   cluster_network_host_prefix   = var.openshift_cluster_network_host_prefix
-  machine_cidr                  = var.machine_v4_cidrs[0]
+  machine_cidr                  = local.machine_v4_cidrs[0]
   service_network_cidr          = var.openshift_service_network_cidr
   azure_dns_resource_group_name = var.azure_base_domain_resource_group_name
   openshift_pull_secret         = var.openshift_pull_secret
@@ -442,7 +445,7 @@ data "azurerm_resource_group" "main" {
 data "azurerm_resource_group" "network" {
   count = var.azure_preexisting_network ? 1 : 0
 
-  name = var.azure_network_resource_group_name
+  name = local.azure_network_resource_group_name
 }
 
 data "azurerm_resource_group" "image_storage" {

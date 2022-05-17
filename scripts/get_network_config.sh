@@ -81,6 +81,14 @@ function get_virtual_network_name() {
   echo ${virtual_network_name}
 }
 
+function get_virtual_network_cidr() {
+  local virtual_networks=$(get_virtual_networks)
+
+  local virtual_network_cidr=$(echo "${virtual_networks}" | ${INSTALLER_WORKSPACE}jq -r '.[0].properties.addressSpace' | ${INSTALLER_WORKSPACE}jq -r '.addressPrefixes')
+  local virtual_network_cidr=$(echo "${virtual_network_cidr}" | sed 's/\[//' |  sed 's/\]//' ) # ("${virtual_network_cidr}", "[", "") )
+  echo ${virtual_network_cidr}
+}
+
 function get_virtual_network_usages() {
   local http_endpoint="https://management.azure.com/subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_NAME}/providers/Microsoft.Network/virtualNetworks/${VIRTUAL_NETWORK_NAME}/usages?api-version=2021-05-01"
 
@@ -156,6 +164,9 @@ if [[ -z "${RESOURCE_GROUP_NAME}" ]]; then exit 1; fi
 VIRTUAL_NETWORK_NAME=$(get_virtual_network_name)
 if [[ -z "${VIRTUAL_NETWORK_NAME}" ]]; then exit 1; fi
 
+VIRTUAL_NETWORK_CIDR=$(get_virtual_network_cidr)
+if [[ -z "${VIRTUAL_NETWORK_CIDR}" ]]; then exit 1; fi
+
 CONTROL_PLANE_SUBNET=$(get_subnet "${CONTROL_PLANE_SUBNET_SUBSTRING}")
 if [[ -z "${CONTROL_PLANE_SUBNET}" ]]; then exit 1; fi
 CONTROL_PLANE_SUBNET_NAME=$(echo "${CONTROL_PLANE_SUBNET}" | ${INSTALLER_WORKSPACE}jq -r '(.name)')
@@ -177,4 +188,5 @@ ${INSTALLER_WORKSPACE}jq -n \
   --arg control_plane_address_prefix "$CONTROL_PLANE_SUBNET_ADDRESS_PREFIX" \
   --arg compute_subnet "$COMPUTE_SUBNET_NAME" \
   --arg compute_address_prefix "$COMPUTE_SUBNET_ADDRESS_PREFIX" \
-  '{"resource_group_name":$resource_group_name, "virtual_network":$virtual_network, "control_plane_subnet":$control_plane_subnet, "control_plane_address_prefix":$control_plane_address_prefix, "compute_subnet":$compute_subnet, "compute_address_prefix":$compute_address_prefix}'
+  --arg virtual_network_cidr "$VIRTUAL_NETWORK_CIDR" \
+  '{"resource_group_name":$resource_group_name, "virtual_network":$virtual_network, "control_plane_subnet":$control_plane_subnet, "control_plane_address_prefix":$control_plane_address_prefix, "compute_subnet":$compute_subnet, "compute_address_prefix":$compute_address_prefix, "virtual_network_cidr":$virtual_network_cidr}'
