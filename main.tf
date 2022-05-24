@@ -7,6 +7,7 @@ provider "azurerm" {
   #tenant_id       = var.azure_tenant_id
   ####
   environment     = var.azure_environment
+  partner_id = "06f07fff-296b-5beb-9092-deab0c6bb8ea"
 }
 
 resource "null_resource" "installer_workspace" {
