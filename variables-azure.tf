@@ -245,10 +245,6 @@ variable "master_count" {
 variable "worker_count" {
   type    = string
   default = 3
-  validation {
-    condition     = var.worker_count > 1
-    error_message = "The worker_count value must be greater than 1."
-  }
 }
 
 variable "infra_count" {

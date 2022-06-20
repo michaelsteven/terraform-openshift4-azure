@@ -1,4 +1,8 @@
 #!/bin/bash
+if  [[ "${PROXY_EVAL}" == "true" ]]; then 
+    export no_proxy=mirror.openshift.com;
+fi
+
 set -e
 
 function install_openshift_installer() {

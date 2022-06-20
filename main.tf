@@ -23,6 +23,7 @@ resource "null_resource" "installer_workspace" {
       INSTALLER_WORKSPACE = self.triggers.installer_workspace
       OPENSHIFT_INSTALLER_URL = var.openshift_installer_url
       OPENSHIFT_VERSION = var.openshift_version
+      PROXY_EVAL = var.no_proxy_test
     }
   }
 
