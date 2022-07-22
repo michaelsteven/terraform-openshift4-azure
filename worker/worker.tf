@@ -142,7 +142,7 @@ resource "azurerm_managed_disk" "storage" {
   storage_account_type = "StandardSSD_LRS"
   create_option        = "Empty"
   disk_size_gb         = var.infra_data_disk_size_GB
-  zone                = length(var.availability_zones) > 1 ? var.availability_zones[count.index % length(var.availability_zones)] : var.availability_zones[0]
+  zones                = [length(var.availability_zones) > 1 ? var.availability_zones[count.index % length(var.availability_zones)] : var.availability_zones[0]]
   
 }
 
