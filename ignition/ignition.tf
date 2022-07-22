@@ -67,10 +67,45 @@ locals {
   ignition_base_uri       = "https://${var.storage_account_name}.blob.core.windows.net/${var.ignition_sas_container_name}"
 }
 
+# resource "null_resource" "download_binaries" {
+#   provisioner "local-exec" {
+#     when = create
+#     command = templatefile("${path.module}/scripts/download.sh.tmpl", {
+#       INSTALLER_WORKSPACE     = local.installer_workspace
+#       OPENSHIFT_INSTALLER_URL = local.openshift_installer_url
+#       OPENSHIFT_VERSION       = var.openshift_version
+#       AIRGAPPED_ENABLED       = var.airgapped["enabled"]
+#       AIRGAPPED_REPOSITORY    = var.airgapped["repository"]
+#       PULL_SECRET             = var.openshift_pull_secret
+#       PATH_ROOT               = path.root
+#       PROXY_EVAL              = var.proxy_eval
+#     })
+#   }
+# }
+
+# resource "null_resource" "generate_manifests" {
+#   triggers = {
+#     install_config = data.template_file.install_config_yaml.rendered
+#   }
+
+#   depends_on = [
+#     null_resource.download_binaries,
+#     local_file.install_config_yaml,
+#   ]
+
+#   provisioner "local-exec" {
+#     command = templatefile("${path.module}/scripts/manifests.sh.tmpl", {
+#       installer_workspace = local.installer_workspace
+#     })
+#   }
+# }
+
 resource "null_resource" "download_binaries" {
   provisioner "local-exec" {
     when = create
-    command = templatefile("${path.module}/scripts/download.sh.tmpl", {
+    interpreter = ["/bin/bash"]
+    command = "${path.module}/scripts/download.sh.tmpl"
+    environment = {
       INSTALLER_WORKSPACE     = local.installer_workspace
       OPENSHIFT_INSTALLER_URL = local.openshift_installer_url
       OPENSHIFT_VERSION       = var.openshift_version
@@ -79,7 +114,7 @@ resource "null_resource" "download_binaries" {
       PULL_SECRET             = var.openshift_pull_secret
       PATH_ROOT               = path.root
       PROXY_EVAL              = var.proxy_eval
-    })
+    }
   }
 }
 
@@ -95,9 +130,12 @@ resource "null_resource" "generate_manifests" {
   ]
 
   provisioner "local-exec" {
-    command = templatefile("${path.module}/scripts/manifests.sh.tmpl", {
+    when = create
+    interpreter = ["/bin/bash"]
+    command = "${path.module}/scripts/manifests.sh.tmpl"
+    environment = {
       installer_workspace = local.installer_workspace
-    })
+    }
   }
 }
 

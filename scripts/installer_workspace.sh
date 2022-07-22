@@ -13,7 +13,7 @@ function install_openshift_installer() {
         tar zxvf ${INSTALLER_WORKSPACE}/openshift-install-mac-4*.tar.gz -C ${INSTALLER_WORKSPACE}
         ;;
       Linux)
-        wget -r -l1 -np -nd -q ${OPENSHIFT_INSTALLER_URL}/${OPENSHIFT_VERSION}/openshift-install-linux-${OPENSHIFT_VERSION}.tar.gz -P ${INSTALLER_WORKSPACE} 
+        curl -SL  ${OPENSHIFT_INSTALLER_URL}/${OPENSHIFT_VERSION}/openshift-install-linux-${OPENSHIFT_VERSION}.tar.gz -o ${INSTALLER_WORKSPACE}openshift-install-linux-${OPENSHIFT_VERSION}.tar.gz 
         tar zxvf ${INSTALLER_WORKSPACE}openshift-install-linux-4*.tar.gz -C ${INSTALLER_WORKSPACE}
         ;;
       *)
@@ -32,7 +32,7 @@ function install_openshift_client() {
         tar zxvf ${INSTALLER_WORKSPACE}/openshift-client-mac-4*.tar.gz -C ${INSTALLER_WORKSPACE}
         ;;
       Linux)
-        wget -r -l1 -np -nd -q ${OPENSHIFT_INSTALLER_URL}/${OPENSHIFT_VERSION}/openshift-client-linux-${OPENSHIFT_VERSION}.tar.gz -P ${INSTALLER_WORKSPACE}
+        curl -SL ${OPENSHIFT_INSTALLER_URL}/${OPENSHIFT_VERSION}/openshift-client-linux-${OPENSHIFT_VERSION}.tar.gz -o ${INSTALLER_WORKSPACE}openshift-client-linux-${OPENSHIFT_VERSION}.tar.gz
         tar zxvf ${INSTALLER_WORKSPACE}openshift-client-linux-4*.tar.gz -C ${INSTALLER_WORKSPACE}
         ;;
       *)
