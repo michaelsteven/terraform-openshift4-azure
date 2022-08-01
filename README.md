@@ -16,7 +16,7 @@ This [terraform](terraform.io) implementation will deploy OpenShift 4.x into an 
 
 ## Prerequisites
 
-1. [Create a Service Principal](https://github.com/openshift/installer/blob/d0f7654bc4a0cf73392371962aef68cd9552b5dd/docs/user/azure/credentials.md) with proper IAM roles. Note that more granular Azure Roles can be used. Please see related [doc]()
+1. [Create a Service Principal](https://github.com/openshift/installer/blob/d0f7654bc4a0cf73392371962aef68cd9552b5dd/docs/user/azure/credentials.md) with proper IAM roles. Note that more granular Azure Roles can be used. Please see related [doc](docs/azure_roles.md)
 
 
 ## Minimal TFVARS file
