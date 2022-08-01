@@ -15,7 +15,7 @@ function install_openshift_installer() {
         ;;
       Linux)
         curl -SL ${OPENSHIFT_INSTALLER_URL}/${OPENSHIFT_VERSION}/openshift-install-linux-${OPENSHIFT_VERSION}.tar.gz -o ${INSTALLER_WORKSPACE}openshift-install-linux-${OPENSHIFT_VERSION}.tar.gz
-        tar zxvf ${INSTALLER_WORKSPACE}openshift-install-linux-4*.tar.gz -C ${INSTALLER_WORKSPACE}
+        tar zxvf ${INSTALLER_WORKSPACE}openshift-install-linux-${OPENSHIFT_VERSION}.tar.gz -C ${INSTALLER_WORKSPACE}
         ;;
       *)
         exit 1;;
@@ -34,7 +34,7 @@ function install_openshift_client() {
         ;;
       Linux)
         curl -SL ${OPENSHIFT_INSTALLER_URL}/${OPENSHIFT_VERSION}/openshift-client-linux-${OPENSHIFT_VERSION}.tar.gz -o ${INSTALLER_WORKSPACE}openshift-client-linux-${OPENSHIFT_VERSION}.tar.gz
-        tar zxvf ${INSTALLER_WORKSPACE}openshift-client-linux-4*.tar.gz -C ${INSTALLER_WORKSPACE}
+        tar zxvf ${INSTALLER_WORKSPACE}openshift-client-linux-${OPENSHIFT_VERSION}.tar.gz -C ${INSTALLER_WORKSPACE}
         ;;
       *)
         exit 1;;
