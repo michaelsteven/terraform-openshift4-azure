@@ -3,7 +3,7 @@ If assigning Contributor or User Access Administator Roles to the Azure Service 
 ### Scenario 1 - An empty Cluster Resource Group (RG) and a pre-existing Network RG
 The Openshift cluster is to be installed into 2 Resource Groups (RG). The Cluster RG is to hold cluster objects (VMs, Load Balancers, Disks, etc.) and the second is a pre-existing Network RG with a preexisting VNET and SUBNET. Since the VNET is shared with other deployed applications, we need to restrict the capabilities of the Service Principle to assure business continuity of pre-existing applications. Also, there is a pre-existing DNS so no permissions for DNS creation are required.
 
-The following are 2 Custom Roles that can scoped to their respective RGs. 
+The following are 2 sample Custom Roles that can scoped to their respective RGs. 
 
 Cluster Resource Group
 
