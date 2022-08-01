@@ -57,6 +57,7 @@ Cluster Resource Group
                     "Microsoft.Network/networkInterfaces/join/action",
                     "Microsoft.Network/networkInterfaces/read",
                     "Microsoft.Resources/subscriptions/resourcegroups/read"
+                    ## the following are optional if openshift_managed_infrastructure=false
                     "Microsoft.ManagedIdentity/userAssignedIdentities/*",
                     "Microsoft.Authorization/roleAssignments/*"
                 ],
