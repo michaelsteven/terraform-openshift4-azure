@@ -1,31 +1,29 @@
 # OpenShift 4 UPI on Azure Cloud
 
-### *The primary intent of this branch to cover the scenario where the cluster will be fully provisioned using terraform during install time. It is a UPI implementation without cluster infrastructure management capabilites*
 
 
-This [terraform](terraform.io) implementation will deploy OpenShift 4.x into an Azure VNET, with two subnets for controlplane and worker nodes.  Traffic to the master nodes is handled via a pair of loadbalancers, one for internal traffic and another for external API traffic.  Application loadbalancing is handled by a third loadbalancer that talks to the router pods on the infra nodes.  Worker, Infra and Master nodes are deployed across 3 Availability Zones. 
 
-** Note that this version can implement the following custom scenario:
-1. If needed, leverage an existing Azure Storage Account for coreos vhd, boot logs, and installer ignition files
-2. If needed, predefine the load balancer IPs for the existing DNS record sets (api, api-int, and *.app)
-3. If needed, remove cluster self-manangement capabilites and deploy as bare metal.
+This [terraform](terraform.io) implementation will deploy OpenShift 4.x into an Azure Managed Subscription.  Traffic to the master nodes is handled via a pair of loadbalancers, one for internal traffic and another for external API traffic.  Application loadbalancing is handled by a third loadbalancer that talks to the router pods on the infra nodes.  Worker, Infra and Master nodes are deployed across 3 Availability Zones. 
+
+** Note that this version can implement the following custom scenarios as needed:
+1. leverage an existing Azure Storage Account for coreos vhd, boot logs, and installer ignition files
+2. predefine the load balancer IPs for the existing DNS record sets (api, api-int, and *.app)
+3. remove cluster self-manangement capabilites and deploy using terraform only.
+4. use a managed disk to stage coreos vhd instead of an Azure Storage Account.
 
 
 ![Topology](./media/topology.svg)
 
 ## Prerequisites
 
-1. [Configure DNS](https://github.com/openshift/installer/blob/d0f7654bc4a0cf73392371962aef68cd9552b5dd/docs/user/azure/dnszone.md)
+1. [Create a Service Principal](https://github.com/openshift/installer/blob/d0f7654bc4a0cf73392371962aef68cd9552b5dd/docs/user/azure/credentials.md) with proper IAM roles. Note that more granular Azure Roles can be used. Please see related [doc]()
 
-2. [Create a Service Principal](https://github.com/openshift/installer/blob/d0f7654bc4a0cf73392371962aef68cd9552b5dd/docs/user/azure/credentials.md) with proper IAM roles
-
-3. [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
 
 ## Minimal TFVARS file
 
 ```terraform
 azure_region = "eastus2"
-cluster_name = "ocp46"
+cluster_name = "ocp4"
 
 # From Prereq. Step #1
 base_domain                           = "azure.example.com"
@@ -180,7 +178,7 @@ azure_storage_account_name        = "XXXX"
 
 ## Infra and Worker Node Deployment
 
-Deployment of Openshift Worker and Infra nodes is handled by the machine-operator-api cluster operator.
+Check Deployment of Openshift Worker and Infra nodes is handled by the machine-operator-api cluster operator.
 
 ```bash
 $ oc get machineset -n openshift-machine-api
@@ -207,26 +205,42 @@ fs2021-hv0eu-worker-eastus23-tsw44   Running   Standard_D8s_v3   eastus2   3    
 
 The infra nodes host the router/ingress pods, all the monitoring infrastrucutre, and the image registry.
 
-## Optional: Set the IP that is defined in existing DNS for cluster apps 
-Replace XXX below with the DNS IP assigned for *.apps record set. 
+Check Status of Cluster Operators
 
 ```bash
-oc patch svc router-default --patch '{"spec":{"loadBalancerIP":"XXX"}}' --type=merge -n openshift-ingress
+oc get co 
 ```
-
-## Azure Red Hat CoreOS Image
-
-### Create Azure Image and Cleanup
-Prior to creating the cluster, create the azure image
-```
-terraform apply -target=module.image -auto-approve
-```
-Capture the image_id and hold onto it
-```
-terraform state rm module.image[0].azurerm_image.cluster
-terraform destroy -auto-approve
-```
-Populate the azure_image_id variable in the .tfvars file with the above image_id.
-
-Create the cluster by applying the full terraform
-
+<pre>
+NAME                                       VERSION   AVAILABLE   PROGRESSING   DEGRADED   SINCE
+authentication                             4.8.35    True        False         False      23h
+baremetal                                  4.8.35    True        False         False      40d
+cloud-credential                           4.8.35    True        False         False      40d
+cluster-autoscaler                         4.8.35    True        False         False      40d
+config-operator                            4.8.35    True        False         False      40d
+console                                    4.8.35    True        False         False      14d
+csi-snapshot-controller                    4.8.35    True        False         False      40d
+dns                                        4.8.35    True        False         False      38d
+etcd                                       4.8.35    True        False         False      40d
+image-registry                             4.8.35    True        False         False      40d
+ingress                                    4.8.35    True        False         False      40d
+insights                                   4.8.35    True        False         False      40d
+kube-apiserver                             4.8.35    True        False         False      40d
+kube-controller-manager                    4.8.35    True        False         False      40d
+kube-scheduler                             4.8.35    True        False         False      40d
+kube-storage-version-migrator              4.8.35    True        False         False      33d
+machine-api                                4.8.35    True        False         False      40d
+machine-approver                           4.8.35    True        False         False      40d
+machine-config                             4.8.35    True        False         False      26d
+marketplace                                4.8.35    True        False         False      40d
+monitoring                                 4.8.35    True        False         False      40d
+network                                    4.8.35    True        False         False      40d
+node-tuning                                4.8.35    True        False         False      26d
+openshift-apiserver                        4.8.35    True        False         False      115m
+openshift-controller-manager               4.8.35    True        False         False      9d
+openshift-samples                          4.8.35    True        False         False      40d
+operator-lifecycle-manager                 4.8.35    True        False         False      40d
+operator-lifecycle-manager-catalog         4.8.35    True        False         False      40d
+operator-lifecycle-manager-packageserver   4.8.35    True        False         False      40d
+service-ca                                 4.8.35    True        False         False      40d
+storage                                    4.8.35    True        False         False      38d
+</pre>
