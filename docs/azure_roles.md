@@ -1,9 +1,9 @@
 If assigning Contributor or User Access Administator Roles to the Azure Service Princpal are not permitted, it is possible to define a more granular subset of Roles to install openshift. Here is a reference set of Roles that were used to sucessfully install openshift 4.6-4.10.
 
-### Scenario 1 - Contributor or User Access Administator Roles cannot be assigned to the Azure Service Princpal
-The Openshift cluster is to be installed into 2 Resource Groups (RG). The Cluster RG is to hold cluster objects (VMs, Load Balancers, Disks, etc.) and the second is a pre-existing Network RG with a preexisting VNET and SUBNET. Since the VNET is shared with other deployed applications, we need to restrict the capabilities of the Service Principle to assure business continuity of pre-existing applications. There is a pre-existing DNS so no permissions for DNS creation are required.
+### Scenario 1 - An empty Cluster Resource Group (RG) and a pre-existing Network RG
+The Openshift cluster is to be installed into 2 Resource Groups (RG). The Cluster RG is to hold cluster objects (VMs, Load Balancers, Disks, etc.) and the second is a pre-existing Network RG with a preexisting VNET and SUBNET. Since the VNET is shared with other deployed applications, we need to restrict the capabilities of the Service Principle to assure business continuity of pre-existing applications. Also, there is a pre-existing DNS so no permissions for DNS creation are required.
 
-The following are 2 Custom Roles that can be used with each scoped to their respective RG. It is possible that the target Azure subscription account already has similar Custom Roles defined for the installation/deployment of other applications.
+The following are 2 Custom Roles that can scoped to their respective RGs. 
 
 Cluster Resource Group
 
