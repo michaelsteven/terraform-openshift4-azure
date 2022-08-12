@@ -1,0 +1,102 @@
+
+### CHOOSE AUTHENTICATION - terrafrom variables or environment variables
+## If terrafrom then uncomment below
+# azure_tenant_id = "AAAA-BBBB-CCCC"
+# azure_client_id = "AAAA-BBBB-CCCC"
+# azure_client_secret = "AAAA-BBBB-CCCC"
+# azure_subscription_id = "AAAA-BBBB-CCCC"
+#
+## If Environment vraiables the set them in your profile as shown.
+# export ARM_TENANT_ID="AAAA-BBBB-CCCC"
+# export ARM_CLIENT_ID="AAAA-BBBB-CCCC" 
+# export ARM_CLIENT_SECRET="AAAA-BBBB-CCCC"
+# export ARM_SUBSCRIPTION_ID="AAAA-BBBB-CCCC"
+#
+############
+
+azure_region = "westus2"
+cluster_name = "ocp4"   
+
+# Cluster Resource Group 
+azure_resource_group_name         = "agrau-cluster-rg"        # The name of the resource group for the cluster. 
+
+# custom network
+azure_preexisting_network         = true
+azure_network_resource_group_name = "agrau-ntwrk-rg"          
+azure_virtual_network             = "vnet"                    
+azure_control_plane_subnet        = "control_plane"                   
+azure_compute_subnet              = "compute_plane"                  
+machine_v4_cidrs                  = ["10.1.0.0/24"] 
+
+# DNS
+base_domain                       = "cpd.agrau.com"
+## if using infoblox to write to your dns then set the following. This will create all DNS records needed for OCP.
+# openshift_dns_provider            = "infoblox"
+# infoblox_username                 = "<value>"
+# infoblox_password                 = "<value>"
+# infoblox_fqdn                     = "<value>"
+##
+
+# Proxy
+azure_outbound_user_defined_routing = true
+proxy_config = {
+  enabled               = true                    # set to true to enable proxy configuration
+  httpProxy             = "http://10.1.0.4:3128"  
+  httpsProxy            = "http://10.1.0.4:3128"  
+  noProxy    = ""
+}
+
+# MACHINE SPECS
+
+## Cluster sizing
+azure_master_vm_type = "Standard_D16s_v3"
+worker_count = 4
+azure_worker_vm_type = "Standard_D32s_v3"
+infra_count = 3
+azure_infra_vm_type = "Standard_D16s_v3"
+infra_data_disk_size_GB = 1024
+
+# Set openshift version to install
+openshift_version = "4.8.35"
+
+# create the key, get the string value in the pub file (Ex: "/home/<user>/.ssh/id_rsa.pub") and provide value for openshift_ssh_key
+openshift_ssh_key                 ="ssh-ed25519 AAAA+BBBB+C3NzaC1lZDI1NTE5AAAAIMsyknrM+39872342afer+12345678 user@bastion"
+
+# get your pull-secret from redhat and add private registry (ex: 10.1.0.4:5000), if needed
+openshift_pull_secret_string = <<EOF
+{
+    "auths": {
+        "cloud.openshift.com": {
+            "auth": "AAA",
+            "email": "<email>"
+        },
+        "quay.io": {
+            "auth": "BBB",
+            "email": "<email>"
+        },
+        "registry.connect.redhat.com": {
+            "auth": "CCC",
+            "email": "<email>"
+        },
+        "registry.redhat.io": {
+            "auth": "DDD",
+            "email": "<email>"
+        },
+        "10.1.0.4:5000": {
+            "auth": "EEE"
+		}
+    }
+}
+EOF
+
+# if using private registry then provide CA crt value here 
+openshift_additional_trust_bundle_string = <<EOF
+    -----BEGIN CERTIFICATE-----
+    AAAAAA+JygrOGthUwDQYJKoZIhvcNAQEL
+    BBBBBBELMAkGA1UEBhMCVVMxCzAJBgNVBAgMAlZBMQ8wDQYDVQQHDAZSZXN0b24x
+    ...
+    -----END CERTIFICATE-----
+EOF
+
+openshift_managed_infrastructure = true
+
