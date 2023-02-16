@@ -574,3 +574,9 @@ variable "infoblox_apps_dns_entries" {
     "thanos-querier-openshift-monitoring"
   ]
 }
+
+variable "bootstrap_cleanup" {
+  type        = bool
+  description = "Use this to remove the bootstrap post install"
+  default     = false  
+}

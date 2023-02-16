@@ -142,3 +142,8 @@ variable "managed_infrastructure" {
   type        = bool
   default     = true  
 }
+
+variable "azure_shared_image" {
+  description = "Define if using a shared image for install"
+  type        = bool
+}

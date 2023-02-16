@@ -160,3 +160,8 @@ variable "number_of_disks_per_node" {
   description   = "Number of data disk per infra node" 
   default       = 0
 }
+
+variable "azure_shared_image" {
+  description = "Define if using a shared image for install"
+  type        = bool
+}

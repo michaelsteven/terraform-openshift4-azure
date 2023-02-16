@@ -146,7 +146,26 @@ resource "azurerm_linux_virtual_machine" "bootstrap" {
     disk_size_gb         = 100
   }
 
-  source_image_id = var.vm_image
+  dynamic "source_image_reference" {
+      for_each = !var.azure_shared_image ? [1] : []
+      content {
+        publisher = "redhat"
+        offer     = "rh-ocp-worker"
+        sku       = "rh-ocp-worker"
+        version   = "4.8.2021122100"
+      }
+  }
+
+  dynamic "plan" {
+      for_each = !var.azure_shared_image ? [1] : []
+      content {
+        name = "rh-ocp-worker"
+        product = "rh-ocp-worker"
+        publisher = "redhat"
+      }
+  }
+
+  source_image_id = var.azure_shared_image ? var.vm_image : null
 
   computer_name = "${var.cluster_id}-bootstrap-vm"
   custom_data   = base64encode(var.ignition)

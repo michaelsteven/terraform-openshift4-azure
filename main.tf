@@ -297,11 +297,14 @@ module "ignition" {
 }
 
 module "bootstrap" {
+  count                     = !var.bootstrap_cleanup ? 1 : 0
+  
   source                    = "./bootstrap"
   resource_group_name       = data.azurerm_resource_group.main.name
   region                    = var.azure_region
   vm_size                   = var.azure_bootstrap_vm_type
   vm_image                  = local.azure_image_id
+  azure_shared_image        = var.azure_shared_image
   identity                  = var.openshift_managed_infrastructure ? azurerm_user_assigned_identity.main[0].id : ""
   cluster_id                = local.cluster_id
   ignition                  = module.ignition.bootstrap_ignition
@@ -333,6 +336,7 @@ module "master" {
   availability_zones     = var.azure_master_availability_zones
   vm_size                = var.azure_master_vm_type
   vm_image               = local.azure_image_id
+  azure_shared_image     = var.azure_shared_image
   identity               = var.openshift_managed_infrastructure ? azurerm_user_assigned_identity.main[0].id : ""
   ignition               = module.ignition.master_ignition
   elb_backend_pool_v4_id = module.vnet.public_lb_backend_pool_v4_id
@@ -369,6 +373,7 @@ module "infra" {
   availability_zones     = var.azure_master_availability_zones
   vm_size                = var.azure_infra_vm_type
   vm_image               = local.azure_image_id
+  azure_shared_image     = var.azure_shared_image
   identity               = var.openshift_managed_infrastructure ? azurerm_user_assigned_identity.main[0].id : ""
   ignition               = module.ignition.worker_ignition
   elb_backend_pool_v4_id = module.vnet.public_lb_backend_pool_v4_id
@@ -407,6 +412,7 @@ module "worker" {
   availability_zones     = var.azure_master_availability_zones
   vm_size                = var.azure_worker_vm_type
   vm_image               = local.azure_image_id
+  azure_shared_image     = var.azure_shared_image
   identity               = var.openshift_managed_infrastructure ? azurerm_user_assigned_identity.main[0].id : ""
   ignition               = module.ignition.worker_ignition
   elb_backend_pool_v4_id = module.vnet.public_lb_backend_pool_v4_id

@@ -1,7 +1,7 @@
 #!/bin/bash
-if  [[ "${PROXY_EVAL}" == "true" ]]; then 
-    export no_proxy=mirror.openshift.com;
-fi
+# if  [[ "${PROXY_EVAL}" == "true" ]]; then 
+#     export no_proxy=mirror.openshift.com;
+# fi
 
 set -e
 

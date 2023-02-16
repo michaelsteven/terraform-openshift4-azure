@@ -117,7 +117,27 @@ resource "azurerm_linux_virtual_machine" "worker" {
     disk_size_gb         = var.os_volume_size
   }
 
-  source_image_id = var.vm_image
+  dynamic "source_image_reference" {
+      for_each = !var.azure_shared_image ? [1] : []
+      content {
+        publisher = "redhat"
+        offer     = "rh-ocp-worker"
+        sku       = "rh-ocp-worker"
+        version   = "4.8.2021122100"
+      }
+  }
+
+  dynamic "plan" {
+      for_each = !var.azure_shared_image ? [1] : []
+      content {
+        name = "rh-ocp-worker"
+        product = "rh-ocp-worker"
+        publisher = "redhat"
+      }
+  }
+
+//  source_image_id = var.vm_image
+  source_image_id = var.azure_shared_image ? var.vm_image : null
 
   //we don't provide a ssh key, because it is set with ignition. 
   //it is required to provide at least 1 auth method to deploy a linux vm
