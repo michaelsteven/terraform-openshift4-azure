@@ -31,3 +31,45 @@ resource "azurerm_network_security_rule" "apiserver_in" {
   resource_group_name         = var.resource_group_name
   network_security_group_name = azurerm_network_security_group.cluster.name
 }
+
+resource "azurerm_network_security_rule" "ssh_in" {
+  name                        = "ssh_in"
+  priority                    = 110
+  direction                   = "Inbound"
+  access                      = "Allow"
+  protocol                    = "Tcp"
+  source_port_range           = "*"
+  destination_port_range      = "22"
+  source_address_prefix       = "*"
+  destination_address_prefix  = "*"
+  resource_group_name         = var.resource_group_name
+  network_security_group_name = azurerm_network_security_group.cluster.name
+}
+
+resource "azurerm_network_security_rule" "tcp-http" {
+  name                        = "tcp-80"
+  priority                    = 201
+  direction                   = "Inbound"
+  access                      = "Allow"
+  protocol                    = "Tcp"
+  source_port_range           = "*"
+  destination_port_range      = "80"
+  source_address_prefix       = "*"
+  destination_address_prefix  = "*"
+  resource_group_name         = var.resource_group_name
+  network_security_group_name = azurerm_network_security_group.cluster.name
+}
+
+resource "azurerm_network_security_rule" "tcp-https" {
+  name                        = "tcp-443"
+  priority                    = 202
+  direction                   = "Inbound"
+  access                      = "Allow"
+  protocol                    = "Tcp"
+  source_port_range           = "*"
+  destination_port_range      = "443"
+  source_address_prefix       = "*"
+  destination_address_prefix  = "*"
+  resource_group_name         = var.resource_group_name
+  network_security_group_name = azurerm_network_security_group.cluster.name
+}

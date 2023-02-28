@@ -18,7 +18,7 @@ variable "vm_size" {
 
 variable "vm_image" {
   type        = string
-  description = "The resource id of the vm image used for masters."
+  description = "The resource id of the vm image used for workers."
 }
 
 variable "identity" {
@@ -46,7 +46,7 @@ variable "ilb_backend_pool_v6_id" {
   type = string
 }
 
-variable "ignition_master" {
+variable "ignition_worker" {
   type    = string
   default = ""
 }
@@ -58,7 +58,7 @@ variable "kubeconfig_content" {
 
 variable "subnet_id" {
   type        = string
-  description = "The subnet to attach the masters to."
+  description = "The subnet to attach the workers to."
 }
 
 variable "os_volume_type" {
@@ -89,7 +89,7 @@ variable "ignition" {
 
 variable "availability_zones" {
   type        = list(string)
-  description = "List of the availability zones in which to create the masters. The length of this list must match instance_count."
+  description = "List of the availability zones in which to create the workers. The length of this list must match instance_count."
 }
 
 variable "private" {
@@ -141,6 +141,24 @@ variable "managed_infrastructure" {
   description = "Define if nodes are is managed by openshift"
   type        = bool
   default     = true  
+}
+
+variable "node_role" {
+  description = "Identify the node role as a worker or infra node"
+  type        = string
+  default     = "worker"
+}
+
+variable "infra_data_disk_size_GB" {
+  type          = string
+  description   = "Size of data disk for infra nodes" 
+  default       = 0
+}
+
+variable "number_of_disks_per_node" {
+  type          = string
+  description   = "Number of data disk per infra node" 
+  default       = 0
 }
 
 variable "azure_shared_image" {

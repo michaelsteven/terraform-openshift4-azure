@@ -1,8 +1,8 @@
 locals {
   bootstrap_nic_ip_v4_configuration_name = "bootstrap-nic-ip-v4"
   bootstrap_nic_ip_v6_configuration_name = "bootstrap-nic-ip-v6"
+  identity_list                          = var.managed_infrastructure ? [var.identity] : []
 }
-
 
 resource "azurerm_public_ip" "bootstrap_public_ip_v4" {
   count = var.private || ! var.use_ipv4 ? 0 : 1
@@ -131,9 +131,12 @@ resource "azurerm_linux_virtual_machine" "bootstrap" {
   admin_password                  = "NotActuallyApplied!"
   disable_password_authentication = false
 
-  identity {
-    type         = "UserAssigned"
-    identity_ids = [var.identity]
+  dynamic "identity" {
+    for_each = local.identity_list
+    content {
+      type         = "UserAssigned"
+      identity_ids = local.identity_list
+    }
   }
 
   os_disk {
@@ -143,13 +146,35 @@ resource "azurerm_linux_virtual_machine" "bootstrap" {
     disk_size_gb         = 100
   }
 
-  source_image_id = var.vm_image
+  dynamic "source_image_reference" {
+      for_each = !var.azure_shared_image ? [1] : []
+      content {
+        publisher = "redhat"
+        offer     = "rh-ocp-worker"
+        sku       = "rh-ocp-worker"
+        version   = "4.8.2021122100"
+      }
+  }
+
+  dynamic "plan" {
+      for_each = !var.azure_shared_image ? [1] : []
+      content {
+        name = "rh-ocp-worker"
+        product = "rh-ocp-worker"
+        publisher = "redhat"
+      }
+  }
+
+  source_image_id = var.azure_shared_image ? var.vm_image : null
 
   computer_name = "${var.cluster_id}-bootstrap-vm"
   custom_data   = base64encode(var.ignition)
 
+  lifecycle {
+    ignore_changes = [custom_data]
+  }
   boot_diagnostics {
-    storage_account_uri = var.storage_account.primary_blob_endpoint
+    storage_account_uri = var.bootlogs_uri
   }
 
   depends_on = [

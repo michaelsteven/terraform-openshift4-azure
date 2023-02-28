@@ -58,9 +58,10 @@ variable "ilb_backend_pool_v6_id" {
   description = "The internal load balancer bakend pool id for ipv6. used to attach the bootstrap NIC"
 }
 
-variable "storage_account" {
-  type        = any
-  description = "the storage account for the cluster. It can be used for boot diagnostics."
+variable "bootlogs_uri" {
+  description = "The boot diagnostics storage account uri for storing the server boot logs"
+  type        = string
+  default     = ""
 }
 
 variable "tags" {
@@ -117,4 +118,15 @@ variable "phase1_complete" {
   description = "In order to get the IPs for the dns we want to complete phase1 first"
   type        = bool
   default     = false  
+}
+
+variable "managed_infrastructure" {
+  description = "Define if nodes are is managed by openshift"
+  type        = bool
+  default     = true  
+}
+
+variable "azure_shared_image" {
+  description = "Define if using a shared image for install"
+  type        = bool
 }

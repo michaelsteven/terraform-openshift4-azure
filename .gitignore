@@ -32,3 +32,4 @@ install-config.yaml
 extras.tf
 vnet/nat-gateway.tf
 bastion.tf
+**/az/*

@@ -4,6 +4,7 @@ terraform {
   required_providers {
     azurerm = {
       source = "hashicorp/azurerm"
+      version = "2.99.0"
     }
     local = {
       source = "hashicorp/local"
@@ -16,6 +17,10 @@ terraform {
     }
     template = {
       source = "hashicorp/template"
+    }
+    infoblox = {
+      source = "infobloxopen/infoblox"
+      version = "2.1.0"
     }
   }
 }

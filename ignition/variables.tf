@@ -10,6 +10,12 @@ variable "cluster_name" {
   type = string
 }
 
+variable "cluster_unique_string" {
+  description = "Random generated unique cluster string"
+  type        = string
+  default     = ""
+}
+
 variable "cluster_network_cidr" {
   type = string
 }
@@ -166,9 +172,19 @@ variable "trust_bundle" {
   default = ""
 }
 
+variable "trust_bundle_string" {
+  type    = string
+  default = ""
+}
+
 variable "byo_dns" {
   type    = bool
   default = false
+}
+
+variable "openshift_dns_provider" {
+  type        = string
+  default     = "azure"
 }
 
 variable "storage_account_name" {
@@ -184,4 +200,40 @@ variable "storage_resource_group" {
 variable "apps_ip" {
   type    = string
   default = ""
+}
+
+variable "managed_infrastructure" {
+  description = "Define if nodes are managed by openshift"
+  type        = bool
+  default     = true  
+}
+
+variable "use_default_imageregistry" {
+  description = "Define if default imageregistry is required"
+  type        = bool
+  default     = true
+}
+
+variable "ignition_sas_token" {
+  description = "The SAS storage token string for the ignition files"
+  type        = string
+  default     = ""
+}
+
+variable "ignition_sas_container_name" {
+  description = "Name of the container used for SAS storage for the ignition files"
+  type        = string
+  default     = ""
+}
+
+variable "openshift_pull_secret_string" {
+  type        = string
+  description = "pull-secret as a string"
+  default     = ""
+}
+
+variable "proxy_eval" {
+  type        = bool
+  description = "Turn on/off proxy evaluation for testing"
+  default     = false  
 }

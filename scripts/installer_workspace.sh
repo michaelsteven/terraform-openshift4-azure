@@ -1,5 +1,4 @@
 #!/bin/bash
-
 # if  [[ "${PROXY_EVAL}" == "true" ]]; then 
 #     export no_proxy=mirror.openshift.com;
 # fi
@@ -14,8 +13,8 @@ function install_openshift_installer() {
         tar zxvf ${INSTALLER_WORKSPACE}/openshift-install-mac-4*.tar.gz -C ${INSTALLER_WORKSPACE}
         ;;
       Linux)
-        curl -SL ${OPENSHIFT_INSTALLER_URL}/${OPENSHIFT_VERSION}/openshift-install-linux-${OPENSHIFT_VERSION}.tar.gz -o ${INSTALLER_WORKSPACE}openshift-install-linux-${OPENSHIFT_VERSION}.tar.gz
-        tar zxvf ${INSTALLER_WORKSPACE}openshift-install-linux-${OPENSHIFT_VERSION}.tar.gz -C ${INSTALLER_WORKSPACE}
+        curl -SL  ${OPENSHIFT_INSTALLER_URL}/${OPENSHIFT_VERSION}/openshift-install-linux-${OPENSHIFT_VERSION}.tar.gz -o ${INSTALLER_WORKSPACE}openshift-install-linux-${OPENSHIFT_VERSION}.tar.gz 
+        tar zxvf ${INSTALLER_WORKSPACE}openshift-install-linux-4*.tar.gz -C ${INSTALLER_WORKSPACE}
         ;;
       *)
         exit 1;;
@@ -34,7 +33,7 @@ function install_openshift_client() {
         ;;
       Linux)
         curl -SL ${OPENSHIFT_INSTALLER_URL}/${OPENSHIFT_VERSION}/openshift-client-linux-${OPENSHIFT_VERSION}.tar.gz -o ${INSTALLER_WORKSPACE}openshift-client-linux-${OPENSHIFT_VERSION}.tar.gz
-        tar zxvf ${INSTALLER_WORKSPACE}openshift-client-linux-${OPENSHIFT_VERSION}.tar.gz -C ${INSTALLER_WORKSPACE}
+        tar zxvf ${INSTALLER_WORKSPACE}openshift-client-linux-4*.tar.gz -C ${INSTALLER_WORKSPACE}
         ;;
       *)
         exit 1;;
@@ -52,7 +51,7 @@ function install_jq() {
         curl -sSL https://github.com/stedolan/jq/releases/download/jq-1.6/jq-osx-amd64 -o ${INSTALLER_WORKSPACE}jq
         ;;
       Linux)
-        curl -SL https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 -o ${INSTALLER_WORKSPACE}jq
+        curl -sSL https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 -o ${INSTALLER_WORKSPACE}jq
         ;;
       *)
         exit 1;;
@@ -94,10 +93,5 @@ if [[ $? -ne 0 ]]; then exit 1; fi
 
 install_azcopy
 if [[ $? -ne 0 ]]; then exit 1; fi
-
-#if [ "${AIRGAPPED_ENABLED}" = "true" ]; then
-#  ${INSTALLER_WORKSPACE}oc adm release extract -a ${PULL_SECRET} --command=openshift-install ${AIRGAPPED_REPOSITORY}:${OPENSHIFT_VERSION}-x86_64
-#  mv ${PATH_ROOT}/openshift-install ${INSTALLER_WORKSPACE}
-#fi
 
 exit 0
