@@ -12,6 +12,7 @@ This [terraform](terraform.io) implementation will deploy OpenShift 4.x into an 
 4. use a managed disk to stage coreos vhd instead of an Azure Storage Account.
 
 
+
 ![Topology](./media/topology.svg)
 
 ## Prerequisites
