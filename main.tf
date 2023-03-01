@@ -438,26 +438,6 @@ module "worker" {
   depends_on = [module.master]
 }
 
-module "dns" {
-  count                           = var.openshift_byo_dns ? 0 : 1
-  source                          = "./dns"
-  cluster_domain                  = "${var.cluster_name}.${var.base_domain}"
-  cluster_id                      = local.cluster_id
-  base_domain                     = var.base_domain
-  virtual_network_id              = module.vnet.virtual_network_id
-  external_lb_fqdn_v4             = module.vnet.public_lb_pip_v4_fqdn
-  external_lb_fqdn_v6             = module.vnet.public_lb_pip_v6_fqdn
-  internal_lb_ipaddress_v4        = module.vnet.internal_lb_ip_v4_address
-  internal_lb_ipaddress_v6        = module.vnet.internal_lb_ip_v6_address
-  resource_group_name             = data.azurerm_resource_group.main.name
-  base_domain_resource_group_name = var.azure_base_domain_resource_group_name
-  private                         = module.vnet.private
-
-  use_ipv4                  = var.use_ipv4 || var.azure_emulate_single_stack_ipv6
-  use_ipv6                  = var.use_ipv6
-  emulate_single_stack_ipv6 = var.azure_emulate_single_stack_ipv6
-}
-
 resource "azurerm_resource_group" "main" {
   count = var.azure_resource_group_name == "" ? 1 : 0
 
