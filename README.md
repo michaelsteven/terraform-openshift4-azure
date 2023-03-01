@@ -10,7 +10,7 @@ This [terraform](terraform.io) implementation will deploy OpenShift 4.x into an 
 2. predefine the load balancer IPs for the existing DNS record sets (api, api-int, and *.app)
 3. remove cluster self-manangement capabilites and deploy using terraform only.
 4. use a managed disk to stage coreos vhd instead of an Azure Storage Account.
-5. Deploy rhcos from Azure market place. Do do so use `azure_shared_image = false` and `azure_image_id = "true"` and perform step 3 beloe before applying Terraform
+5. Deploy rhcos from Azure market place. To do so use `azure_shared_image = false` and `azure_image_id = "true"` and perform step 3 beloe before applying Terraform
 
 
 
