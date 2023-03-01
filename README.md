@@ -10,6 +10,7 @@ This [terraform](terraform.io) implementation will deploy OpenShift 4.x into an 
 2. predefine the load balancer IPs for the existing DNS record sets (api, api-int, and *.app)
 3. remove cluster self-manangement capabilites and deploy using terraform only.
 4. use a managed disk to stage coreos vhd instead of an Azure Storage Account.
+5. Deploy rhcos from Azure market place. To do so use `azure_shared_image = false` and `azure_image_id = "true"` and perform step 3 beloe before applying Terraform
 
 
 
@@ -131,6 +132,7 @@ azure_storage_account_name        = "XXXX"
 | azure_resource_group_name_substring | Azure Resource Group Name filter using the provided substring for dynamically populating the resource group name | - | string
 | azure_control_plane_subnet_substring | Azure Subnet Name filter using the provided substring for dynamically populating the control plane subnet | - | string
 | azure_compute_subnet_substring | Azure Subnet Name filter using the provided substring for dynamically populating the compute subnet | - | string
+| bootstrap_cleanup | Specify as true if you want to do a second run and remove the bootstrap machine | `false` | bool
 
 
 
@@ -144,18 +146,23 @@ azure_storage_account_name        = "XXXX"
 
 2. Create your `terraform.tfvars` file
 
-3. Deploy with terraform
+3. If using rhcos from azure market place then assure that your Service Principle has accepted terms.
+
+    ```bash
+    az vm image list --all --offer rh-ocp-worker --publisher redhat-limited -o table | grep rh-ocp
+    az vm image show --urn redhat:rh-ocp-worker:rh-ocp-worker:4.8.2021122100
+    az vm image terms show --urn redhat:rh-ocp-worker:rh-ocp-worker:4.8.2021122100
+    az vm image terms accept --urn redhat:rh-ocp-worker:rh-ocp-worker:4.8.2021122100
+    ```
+
+    Details can be found here: https://docs.openshift.com/container-platform/4.10/installing/installing_azure/installing-azure-customizations.html#installation-azure-marketplace-subscribe_installing-azure-customizations
+
+4. Deploy with terraform
 
     ```bash
     terraform init
     terraform plan
     terraform apply
-    ```
-
-4. Destroy bootstrap node
-
-    ```bash
-    TF_VAR_bootstrap_complete=true terraform apply
     ```
 
 5. To access your cluster
