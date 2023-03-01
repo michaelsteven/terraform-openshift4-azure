@@ -141,7 +141,7 @@ azure_storage_account_name        = "XXXX"
 1. Clone github repository
 
     ```bash
-    git clone git@github.com:ibm-cloud-architecture/terraform-openshift4-azure.git
+    git clone https://github.com/acgrau/terraform-openshift4-azure.git
     ```
 
 2. Create your `terraform.tfvars` file
