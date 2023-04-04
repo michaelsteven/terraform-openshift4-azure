@@ -174,3 +174,25 @@ resource "azurerm_virtual_machine_data_disk_attachment" "data_disk" {
   lun                = "1${count.index}"
   caching            = "ReadWrite"
 }
+
+resource "azurerm_managed_disk" "worker_disk" {
+ count = var.worker_data_disk_size_GB>0 ? var.instance_count : 0
+
+  name                 = "${var.cluster_id}-worker-${count.index}-data-disk"
+  location             = var.region
+  resource_group_name  = var.resource_group_name
+  storage_account_type = "Premium_LRS"
+  create_option        = "Empty"
+  disk_size_gb         = var.worker_data_disk_size_GB
+  zones                = [length(var.availability_zones) > 1 ? var.availability_zones[count.index % length(var.availability_zones)] : var.availability_zones[0]]
+  
+}
+
+resource "azurerm_virtual_machine_data_disk_attachment" "worker_disk_attachment" {
+  count = var.worker_data_disk_size_GB>0 ? var.instance_count : 0
+
+  managed_disk_id    = azurerm_managed_disk.worker_disk[count.index].id
+  virtual_machine_id = azurerm_linux_virtual_machine.worker[(var.instance_count+count.index)%var.instance_count].id
+  lun                = "1${count.index}"
+  caching            = "ReadWrite"
+}

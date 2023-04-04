@@ -434,6 +434,7 @@ module "worker" {
   phased_approach           = var.phased_approach 
   phase1_complete           = var.phase1_complete
   managed_infrastructure    = var.openshift_managed_infrastructure
+  worker_data_disk_size_GB  = var.worker_data_disk_size_GB
 
   depends_on = [module.master]
 }
@@ -513,33 +514,3 @@ resource "azurerm_role_assignment" "network" {
   role_definition_id = (var.azure_role_id_network == "") ? data.azurerm_role_definition.contributor.id : var.azure_role_id_network
   principal_id         = azurerm_user_assigned_identity.main[0].principal_id
 }
-/* 
-resource "null_resource" "delete_bootstrap" {
-  count = !var.phased_approach || (var.phased_approach && var.phase1_complete) ? 1 : 0
-
-  depends_on = [
-    module.master
-  ]
-
-  provisioner "local-exec" {    
-    command = <<EOF
-./installer-files/openshift-install --dir=./installer-files wait-for bootstrap-complete --log-level=debug
-az vm delete -g ${data.azurerm_resource_group.main.name} -n ${local.cluster_id}-bootstrap -y
-az disk delete -g ${data.azurerm_resource_group.main.name} -n ${local.cluster_id}-bootstrap_OSDisk -y
-if [[ "${var.azure_private}" == "false" ]]; then
-  az network nic ip-config update -g ${data.azurerm_resource_group.main.name} -n bootstrap-nic-ip-v4 --nic-name ${local.cluster_id}-bootstrap-nic --remove PublicIpAddress
-  az network public-ip delete -g ${data.azurerm_resource_group.main.name} -n ${local.cluster_id}-bootstrap-pip-v4
-fi
-az network nic delete -g ${data.azurerm_resource_group.main.name} -n ${local.cluster_id}-bootstrap-nic
-export KUBECONFIG=./installer-files/auth/kubeconfig
-export PATH=./installer-files:$PATH
-# if  [ "${var.apps_dns_ip}" != "" ]; then
-#   oc patch svc router-default --patch '{"spec":{"loadBalancerIP":"${var.apps_dns_ip}"}}' --type=merge -n openshift-ingress
-# fi
-if ${!var.use_default_imageregistry}; then
-  oc patch configs.imageregistry.operator.openshift.io cluster --patch '{"spec":{"managementState":"Removed"}}' --type=merge
-fi
-EOF     
-  }
-}
- */

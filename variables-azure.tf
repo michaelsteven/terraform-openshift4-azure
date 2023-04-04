@@ -580,3 +580,9 @@ variable "bootstrap_cleanup" {
   description = "Use this to remove the bootstrap post install"
   default     = false  
 }
+
+variable "worker_data_disk_size_GB" {
+  type          = string
+  description   = "Size of storage disk for worker nodes" 
+  default       = 0
+}

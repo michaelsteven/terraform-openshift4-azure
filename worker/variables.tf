@@ -165,3 +165,9 @@ variable "azure_shared_image" {
   description = "Define if using a shared image for install"
   type        = bool
 }
+
+variable "worker_data_disk_size_GB" {
+  type          = string
+  description   = "Size of storage disk for worker nodes" 
+  default       = 0
+}
