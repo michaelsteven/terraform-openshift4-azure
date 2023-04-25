@@ -101,13 +101,18 @@ locals {
 # }
 
 resource "null_resource" "download_binaries" {
+
+  triggers = {
+    always_run = "${timestamp()}"
+  }
+
   provisioner "local-exec" {
     when = create
     interpreter = ["/bin/bash"]
     command = "${path.module}/scripts/download.sh.tmpl"
     environment = {
       INSTALLER_WORKSPACE     = local.installer_workspace
-      OPENSHIFT_INSTALLER_URL = local.openshift_installer_url
+      OPENSHIFT_INSTALLER_URL = var.openshift_installer_url
       OPENSHIFT_VERSION       = var.openshift_version
       AIRGAPPED_ENABLED       = var.airgapped["enabled"]
       AIRGAPPED_REPOSITORY    = var.airgapped["repository"]

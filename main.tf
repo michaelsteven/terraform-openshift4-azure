@@ -214,9 +214,13 @@ module "dns" {
   emulate_single_stack_ipv6       = var.azure_emulate_single_stack_ipv6
 }
 
+data "external" "infoblox_env" {
+  program = ["bash", "${path.root}/scripts/infoblox_env.sh"]
+}
+
 provider "infoblox" {
-  username                        = var.infoblox_username
-  password                        = var.infoblox_password
+  username                        = var.infoblox_username != "" ? var.infoblox_username : data.external.infoblox_env.result["infoblox_username"]
+  password                        = var.infoblox_password != "" ? var.infoblox_password : data.external.infoblox_env.result["infoblox_password"]
   server                          = var.infoblox_fqdn
   wapi_version                    = var.infoblox_wapi_version
   pool_connections                = var.infoblox_pool_connections
@@ -227,8 +231,8 @@ module "infoblox_dns" {
   source                          = "./infoblox_dns"
 
   infoblox_fqdn                   = var.infoblox_fqdn
-  infoblox_username               = var.infoblox_username
-  infoblox_password               = var.infoblox_password
+  infoblox_username               = var.infoblox_username != "" ? var.infoblox_username : data.external.infoblox_env.result["infoblox_username"]
+  infoblox_password               = var.infoblox_password != "" ? var.infoblox_password : data.external.infoblox_env.result["infoblox_password"]
   infoblox_allow_any              = var.infoblox_allow_any
   infoblox_apps_dns_entries       = var.infoblox_apps_dns_entries
   cluster_name                    = var.cluster_name
