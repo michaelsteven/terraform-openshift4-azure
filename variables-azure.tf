@@ -230,7 +230,7 @@ variable "azure_infra_root_volume_size" {
 
 variable "azure_worker_root_volume_size" {
   type    = string
-  default = 128
+  default = 300
 }
 
 variable "master_count" {
