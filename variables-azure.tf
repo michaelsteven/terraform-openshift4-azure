@@ -263,7 +263,7 @@ variable "azure_infra_vm_type" {
 
 variable "azure_worker_vm_type" {
   type    = string
-  default = "Standard_D8s_v3"
+  default = "Standard_D16s_v3"
 }
 
 variable "airgapped" {
@@ -571,7 +571,8 @@ variable "infoblox_apps_dns_entries" {
     "alertmanager-main-openshift-monitoring",
     "grafana-openshift-monitoring",
     "prometheus-k8s-openshift-monitoring",
-    "thanos-querier-openshift-monitoring"
+    "thanos-querier-openshift-monitoring",
+    "cpd-cpd-instance"
   ]
 }
 
