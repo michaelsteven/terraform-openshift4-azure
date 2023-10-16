@@ -9,7 +9,12 @@ source "$scripts_dir/api_functions.sh"
 #
 function get_bearer_token() {
   local http_endpoint="https://login.microsoftonline.com/${TENANT_ID}/oauth2/token?api-version=1.0"
-  local http_request_data="grant_type=client_credentials&client_id=${CLIENT_ID}&client_secret=${CLIENT_SECRET}&resource=https%3A%2F%2Fmanagement.azure.com%2F"
+  
+  if [[ -z "${CLIENT_SECRET}" ]]; then 
+    local http_request_data="grant_type=client_credentials&client_id=${CLIENT_ID}&client_secret=${ARM_CLIENT_SECRET}&resource=https%3A%2F%2Fmanagement.azure.com%2F"
+  else 
+    local http_request_data="grant_type=client_credentials&client_id=${CLIENT_ID}&client_secret=${CLIENT_SECRET}&resource=https%3A%2F%2Fmanagement.azure.com%2F"
+  fi  
 
   local http_response=$(curl -sSi -X POST -H 'Content-Type: application/x-www-form-urlencoded' -H 'Accept:application/json' -d "${http_request_data}" "${http_endpoint}")
 

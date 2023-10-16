@@ -22,5 +22,9 @@ terraform {
       source = "infobloxopen/infoblox"
       version = "2.1.0"
     }
+    ignition = {
+      source = "community-terraform-providers/ignition"
+      version = "2.1.3"
+    }
   }
 }
