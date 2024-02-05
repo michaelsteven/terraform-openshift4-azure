@@ -151,6 +151,11 @@ resource "azurerm_linux_virtual_machine" "worker" {
   lifecycle {
     ignore_changes = [custom_data]
   }
+
+  timeouts {
+    create = "60m"
+  }
+
 }
 
 resource "azurerm_managed_disk" "storage" {
@@ -162,7 +167,7 @@ resource "azurerm_managed_disk" "storage" {
   storage_account_type = "Premium_LRS"
   create_option        = "Empty"
   disk_size_gb         = var.infra_data_disk_size_GB
-  zones                = [length(var.availability_zones) > 1 ? var.availability_zones[count.index % length(var.availability_zones)] : var.availability_zones[0]]
+  zone                = length(var.availability_zones) > 1 ? var.availability_zones[count.index % length(var.availability_zones)] : var.availability_zones[0]
   
 }
 
@@ -184,7 +189,7 @@ resource "azurerm_managed_disk" "worker_disk" {
   storage_account_type = "Premium_LRS"
   create_option        = "Empty"
   disk_size_gb         = var.worker_data_disk_size_GB
-  zones                = [length(var.availability_zones) > 1 ? var.availability_zones[count.index % length(var.availability_zones)] : var.availability_zones[0]]
+  zone                = length(var.availability_zones) > 1 ? var.availability_zones[count.index % length(var.availability_zones)] : var.availability_zones[0]
   
 }
 

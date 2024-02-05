@@ -41,7 +41,39 @@ data "external" "vhd_location" {
   ]
 }
 
-resource "null_resource" "disk_create" {
+resource "azurerm_image" "cluster" {
+  name                = "${var.cluster_name}-${var.cluster_unique_string}"
+  resource_group_name = var.cluster_resource_group_name
+  location            = var.region
+
+  os_disk {
+    os_type  = "Linux"
+    os_state = "Generalized"
+    managed_disk_id = azurerm_managed_disk.rhcos_disk.id
+  }
+
+  depends_on = [
+    null_resource.update_disk
+  ]   
+}
+
+resource "azurerm_managed_disk" "rhcos_disk" {
+  name                 = "coreos-${var.openshift_version}-${var.cluster_unique_string}-vhd"
+  location             = var.region
+  resource_group_name  = var.cluster_resource_group_name
+  storage_account_type = "Standard_LRS"
+  create_option        = "Upload"
+  upload_size_bytes    = "17179869696"
+
+}
+
+resource "azurerm_managed_disk_sas_token" "disk_token" {
+  managed_disk_id     = azurerm_managed_disk.rhcos_disk.id
+  duration_in_seconds = 600
+  access_level        = "Write"
+}
+
+resource "null_resource" "update_disk" {
   triggers = {
     installer_workspace   = var.installer_workspace
     subscription_id       = var.subscription_id
@@ -53,11 +85,11 @@ resource "null_resource" "disk_create" {
     bash_debug            = var.bash_debug
     cluster_unique_string = var.cluster_unique_string
     proxy_eval            = var.proxy_eval
+    access_sas            = azurerm_managed_disk_sas_token.disk_token.sas_url
   }
 
   provisioner "local-exec" {
-    when = create
-    command = "${path.module}/scripts/disk_create.sh"
+    command = "${path.module}/scripts/update_disk.sh"
     interpreter = ["/bin/bash"]
     environment = {
       INSTALLER_WORKSPACE = self.triggers.installer_workspace
@@ -72,47 +104,7 @@ resource "null_resource" "disk_create" {
       BASH_DEBUG          = self.triggers.bash_debug
       CLUSTER_ID          = self.triggers.cluster_unique_string
       PROXY_EVAL          = self.triggers.proxy_eval
+      ACCESS_SAS          = self.triggers.access_sas
     }
   }
-
-  provisioner "local-exec" {
-    when    = destroy
-    command = "${path.module}/scripts/disk_delete.sh"
-    interpreter = ["/bin/bash"]
-    environment = {
-      INSTALLER_WORKSPACE = self.triggers.installer_workspace
-      SUBSCRIPTION_ID     = self.triggers.subscription_id
-      TENANT_ID           = self.triggers.tenant_id
-      CLIENT_ID           = self.triggers.client_id
-      CLIENT_SECRET       = self.triggers.client_secret
-      RESOURCE_GROUP_NAME = self.triggers.resource_group_name
-      OPENSHIFT_VERSION   = self.triggers.openshift_version
-      BASH_DEBUG          = self.triggers.bash_debug
-      CLUSTER_ID          = self.triggers.cluster_unique_string      
-    }
-  }
-}
-
-data "azurerm_managed_disk" "rhcos_disk" {
-  name                = "coreos-${var.openshift_version}-${var.cluster_unique_string}-vhd"
-  resource_group_name = var.cluster_resource_group_name
-  depends_on = [
-    null_resource.disk_create
-  ]  
-}
-
-resource "azurerm_image" "cluster" {
-  name                = "${var.cluster_name}-${var.cluster_unique_string}"
-  resource_group_name = var.cluster_resource_group_name
-  location            = var.region
-
-  os_disk {
-    os_type  = "Linux"
-    os_state = "Generalized"
-    managed_disk_id = data.azurerm_managed_disk.rhcos_disk.id
-  }
-
-  depends_on = [
-    data.azurerm_managed_disk.rhcos_disk
-  ]  
 }
