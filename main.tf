@@ -215,7 +215,7 @@ module "dns" {
 }
 
 data "external" "infoblox_env" {
-  program = ["bash", "${path.root}/scripts/infoblox_env.sh"]
+  program = ["bash", "${path.module}/scripts/infoblox_env.sh"]
 }
 
 provider "infoblox" {

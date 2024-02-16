@@ -74,37 +74,23 @@ resource "azurerm_managed_disk_sas_token" "disk_token" {
 }
 
 resource "null_resource" "update_disk" {
-  triggers = {
-    installer_workspace   = var.installer_workspace
-    subscription_id       = var.subscription_id
-    tenant_id             = var.tenant_id
-    client_id             = var.client_id
-    client_secret         = var.client_secret
-    resource_group_name   = var.cluster_resource_group_name
-    openshift_version     = var.openshift_version
-    bash_debug            = var.bash_debug
-    cluster_unique_string = var.cluster_unique_string
-    proxy_eval            = var.proxy_eval
-    access_sas            = azurerm_managed_disk_sas_token.disk_token.sas_url
-  }
-
   provisioner "local-exec" {
     command = "${path.module}/scripts/update_disk.sh"
     interpreter = ["/bin/bash"]
     environment = {
-      INSTALLER_WORKSPACE = self.triggers.installer_workspace
-      SUBSCRIPTION_ID     = self.triggers.subscription_id
-      TENANT_ID           = self.triggers.tenant_id
-      CLIENT_ID           = self.triggers.client_id
-      CLIENT_SECRET       = self.triggers.client_secret
-      RESOURCE_GROUP_NAME = self.triggers.resource_group_name
-      OPENSHIFT_VERSION   = self.triggers.openshift_version
+      INSTALLER_WORKSPACE = var.installer_workspace
+      SUBSCRIPTION_ID     = var.subscription_id
+      TENANT_ID           = var.tenant_id
+      CLIENT_ID           = var.client_id
+      CLIENT_SECRET       = var.client_secret
+      RESOURCE_GROUP_NAME = var.cluster_resource_group_name
+      OPENSHIFT_VERSION   = var.openshift_version
       REGION              = var.region
       RHCOS_IMAGE_URL     = local.rhcos_image
-      BASH_DEBUG          = self.triggers.bash_debug
-      CLUSTER_ID          = self.triggers.cluster_unique_string
-      PROXY_EVAL          = self.triggers.proxy_eval
-      ACCESS_SAS          = self.triggers.access_sas
+      BASH_DEBUG          = var.bash_debug
+      CLUSTER_ID          = var.cluster_unique_string
+      PROXY_EVAL          = var.proxy_eval
+      ACCESS_SAS          = azurerm_managed_disk_sas_token.disk_token.sas_url
     }
   }
 }

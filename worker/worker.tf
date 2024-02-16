@@ -123,7 +123,7 @@ resource "azurerm_linux_virtual_machine" "worker" {
         publisher = "redhat"
         offer     = "rh-ocp-worker"
         sku       = "rh-ocp-worker"
-        version   = "4.8.2021122100"
+        version   = "4.8.2021122100" # 413.92.2023101700 for 4.14+
       }
   }
 
