@@ -224,7 +224,7 @@ spec:
     value:
       apiVersion: azureproviderconfig.openshift.io/v1beta1
       credentialsSecret:
-        name: azure-cloud-credentials
+        name: %{ if var.managed_infrastructure }azure-cloud-credentials%{ else }""%{ endif } 
         namespace: openshift-machine-api
       image:
         offer: ""
@@ -308,7 +308,7 @@ spec:
         value:
           apiVersion: azureproviderconfig.openshift.io/v1beta1
           credentialsSecret:
-            name: azure-cloud-credentials
+            name: %{ if var.managed_infrastructure }azure-cloud-credentials%{ else }""%{ endif } 
             namespace: openshift-machine-api
           image:
             offer: ""
@@ -363,7 +363,7 @@ spec:
     value:
       apiVersion: azureproviderconfig.openshift.io/v1beta1
       credentialsSecret:
-        name: azure-cloud-credentials
+        name: %{ if var.managed_infrastructure }azure-cloud-credentials%{ else }""%{ endif } 
         namespace: openshift-machine-api
       image:
         offer: ""
@@ -455,7 +455,7 @@ spec:
         value:
           apiVersion: azureproviderconfig.openshift.io/v1beta1
           credentialsSecret:
-            name: azure-cloud-credentials
+            name:  %{ if var.managed_infrastructure }azure-cloud-credentials%{ else }""%{ endif } 
             namespace: openshift-machine-api
           image:
             offer: ""
@@ -512,7 +512,7 @@ spec:
     value:
       apiVersion: azureproviderconfig.openshift.io/v1beta1
       credentialsSecret:
-        name: azure-cloud-credentials
+        name:  %{ if var.managed_infrastructure }azure-cloud-credentials%{ else }""%{ endif } 
         namespace: openshift-machine-api
       image:
         offer: ""
@@ -586,6 +586,7 @@ EOF
 }
 
 resource "local_file" "cloud-creds-secret-kube-system" {
+  count = var.managed_infrastructure ? 1 : 0
   content  = data.template_file.cloud-creds-secret-kube-system.rendered
   filename = "${local.installer_workspace}/openshift/99_cloud-creds-secret.yaml"
   depends_on = [

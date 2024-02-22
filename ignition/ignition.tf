@@ -158,8 +158,8 @@ resource "null_resource" "generate_ignition" {
     local_file.openshift-cluster-api_master-machines,
     local_file.openshift-cluster-api_worker-machineset,
     local_file.openshift-cluster-api_infra-machineset,
-    #local_file.ingresscontroller-default,
-    local_file.cloud-creds-secret-kube-system,
+    local_file.configure-ingress-job,
+    #local_file.cloud-creds-secret-kube-system,  TODO: add logic to enable this if var.managed_infrastructure is TRUE
     #local_file.cluster-scheduler-02-config,
     local_file.cluster-monitoring-configmap,
     #local_file.private-cluster-outbound-service,

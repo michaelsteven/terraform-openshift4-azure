@@ -402,7 +402,7 @@ module "infra" {
   infra_data_disk_size_GB   = var.infra_data_disk_size_GB
   number_of_disks_per_node  = var.infra_number_of_disks_per_node
 
-  depends_on = [module.master]
+  depends_on = [module.master, module.worker]
 }
 
 module "worker" {
@@ -440,7 +440,7 @@ module "worker" {
   managed_infrastructure    = var.openshift_managed_infrastructure
   worker_data_disk_size_GB  = var.worker_data_disk_size_GB
 
-  depends_on = [module.master]
+  depends_on = [module.master, time_sleep.wait_x]
 }
 
 resource "azurerm_resource_group" "main" {
@@ -517,4 +517,9 @@ resource "azurerm_role_assignment" "network" {
   scope                = data.azurerm_resource_group.network[0].id
   role_definition_id = (var.azure_role_id_network == "") ? data.azurerm_role_definition.contributor.id : var.azure_role_id_network
   principal_id         = azurerm_user_assigned_identity.main[0].principal_id
+}
+
+resource "time_sleep" "wait_x" {
+  depends_on = [module.master]
+  create_duration = "10m"
 }
