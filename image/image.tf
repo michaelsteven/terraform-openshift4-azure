@@ -1,12 +1,31 @@
 locals {
+  installer_workspace     = "${path.root}/installer-files/"
+  openshift_installer_url = "${var.openshift_installer_url}/${var.openshift_version}/"
   major_version          = join(".", slice(split(".", var.openshift_version), 0, 2))
-  rhcos_image            = lookup(lookup(jsondecode(data.http.images.body), "azure"), "url")
+  rhcos_image            = data.external.vhd_location.result["VHD_URL"]
 }
 
-data "http" "images" {
-  url = "https://raw.githubusercontent.com/openshift/installer/release-${local.major_version}/data/data/rhcos.json"
-  request_headers = {
-    Accept = "application/json"
+data "external" "vhd_location" {
+  program = ["bash", "${path.module}/scripts/get_vhd_path.sh"]
+
+  query = {
+    installer_workspace = var.installer_workspace
+  }
+
+  depends_on = [
+    null_resource.env_setup
+  ]
+}
+
+resource "null_resource" "env_setup" {
+  provisioner "local-exec" {
+    command = "${path.module}/scripts/env_setup.sh"
+    interpreter = ["/bin/bash"]
+    environment = {
+      INSTALLER_WORKSPACE = local.installer_workspace
+      OPENSHIFT_INSTALLER_URL = local.openshift_installer_url
+      OPENSHIFT_VERSION = var.openshift_version
+    }
   }
 }
 

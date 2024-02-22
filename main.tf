@@ -145,6 +145,7 @@ module "image" {
   image_blob_uri                    = var.azure_image_blob_uri
   image_container_name              = var.azure_image_container_name
   image_blob_name                   = var.azure_image_blob_name
+  installer_workspace               = null_resource.installer_workspace.triggers.installer_workspace  
 }
 
 module "shared_image" {

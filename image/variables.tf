@@ -56,3 +56,14 @@ variable "image_blob_name" {
   type        = string
   default     = ""
 }
+
+variable "installer_workspace" {
+  type        = string
+  description = "The working directory used to hold temporary files during installation"
+  default     = ""
+}
+
+variable "openshift_installer_url" {
+  type    = string
+  default = ""
+}
