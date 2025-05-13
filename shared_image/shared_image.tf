@@ -3,7 +3,8 @@ locals {
   openshift_installer_url = "${var.openshift_installer_url}/${var.openshift_version}/"
   major_version           = join(".", slice(split(".", var.openshift_version), 0, 2))
   ocp_v4_10_plus          = substr(local.major_version, 2, 2) >= 10 ? true : false
-  rhcos_image             = local.ocp_v4_10_plus ?  data.external.vhd_location[0].result["VHD_URL"] : lookup(lookup(jsondecode(data.http.images[0].body), "azure"), "url")
+  #rhcos_image             = local.ocp_v4_10_plus ?  data.external.vhd_location[0].result["VHD_URL"] : lookup(lookup(jsondecode(data.http.images[0].body), "azure"), "url")
+  rhcos_image             = "https://rhcos.blob.core.windows.net/imagebucket/rhcos-417.94.202501301529-0-azure.x86_64.vhd"
 }
 
 data "http" "images" {
