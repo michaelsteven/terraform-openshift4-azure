@@ -106,7 +106,7 @@ data "external" "get_network_configuration" {
 }
 
 locals {
-  cluster_id = "${var.cluster_name}-${random_string.cluster_id.result}"
+  cluster_id = "${var.resource_prefix}-${var.cluster_name}-${random_string.cluster_id.result}"
   tags = merge(
     {
       "kubernetes.io_cluster.${local.cluster_id}" = "owned"
@@ -299,7 +299,10 @@ module "ignition" {
   use_default_imageregistry     = var.use_default_imageregistry
   ignition_sas_token            = var.azure_ignition_sas_token
   ignition_sas_container_name   = var.azure_ignition_sas_container_name
-  proxy_eval                    = var.no_proxy_test 
+  proxy_eval                    = var.no_proxy_test
+  master_subnet_id              = module.vnet.master_subnet_id
+  worker_subnet_id              = module.vnet.worker_subnet_id
+  resource_prefix               = "${var.resource_prefix}-${var.cluster_name}"
 }
 
 module "bootstrap" {

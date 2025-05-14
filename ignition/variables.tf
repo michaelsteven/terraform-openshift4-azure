@@ -237,3 +237,20 @@ variable "proxy_eval" {
   description = "Turn on/off proxy evaluation for testing"
   default     = false  
 }
+
+variable "master_subnet_id" {
+  type        = string
+  description = "ID of the master subnet"
+}
+
+
+variable "worker_subnet_id" {
+  type        = string
+  description = "ID of the worker subnet"
+}
+
+
+variable "resource_prefix" {
+  type        = string
+  description = "the prefix to prepend to created resources"
+}

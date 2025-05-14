@@ -587,3 +587,10 @@ variable "worker_data_disk_size_GB" {
   description   = "Size of storage disk for worker nodes" 
   default       = 0
 }
+
+
+variable "resource_prefix" {
+  type        = string
+  description = "the prefix to prepend to created resources"
+  default     = "openshift-example"
+}
