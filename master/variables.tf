@@ -147,3 +147,8 @@ variable "azure_shared_image" {
   description = "Define if using a shared image for install"
   type        = bool
 }
+
+variable "disk_encryption_set_id" {
+  description = "Encryption set to use for master disks."
+  type        = string
+}

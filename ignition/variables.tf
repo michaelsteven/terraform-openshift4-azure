@@ -254,3 +254,8 @@ variable "resource_prefix" {
   type        = string
   description = "the prefix to prepend to created resources"
 }
+
+variable "disk_encryption_set_name" {
+  type        = string
+  description = "Disk encryption set to use for machine disks"
+}

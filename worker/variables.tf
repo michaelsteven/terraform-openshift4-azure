@@ -171,3 +171,8 @@ variable "worker_data_disk_size_GB" {
   description   = "Size of storage disk for worker nodes" 
   default       = 0
 }
+
+variable "disk_encryption_set_id" {
+  description = "Encryption set to use for worker disks."
+  type        = string
+}

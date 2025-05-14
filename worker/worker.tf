@@ -111,10 +111,11 @@ resource "azurerm_linux_virtual_machine" "worker" {
   }
 
   os_disk {
-    name                 = "${var.cluster_id}-${var.node_role}-${count.index}_OSDisk" # os disk name needs to match cluster-api convention
-    caching              = "ReadOnly"
-    storage_account_type = var.os_volume_type
-    disk_size_gb         = var.os_volume_size
+    name                   = "${var.cluster_id}-${var.node_role}-${count.index}_OSDisk" # os disk name needs to match cluster-api convention
+    caching                = "ReadOnly"
+    storage_account_type   = var.os_volume_type
+    disk_size_gb           = var.os_volume_size
+    disk_encryption_set_id = var.disk_encryption_set_id
   }
 
   dynamic "source_image_reference" {
@@ -161,14 +162,14 @@ resource "azurerm_linux_virtual_machine" "worker" {
 resource "azurerm_managed_disk" "storage" {
  count = var.infra_data_disk_size_GB>0 ? var.number_of_disks_per_node * var.instance_count : 0
 
-  name                 = "${var.cluster_id}-infra-${count.index}-data-disk"
-  location             = var.region
-  resource_group_name  = var.resource_group_name
-  storage_account_type = "Premium_LRS"
-  create_option        = "Empty"
-  disk_size_gb         = var.infra_data_disk_size_GB
-  zone                = length(var.availability_zones) > 1 ? var.availability_zones[count.index % length(var.availability_zones)] : var.availability_zones[0]
-  
+  name                   = "${var.cluster_id}-infra-${count.index}-data-disk"
+  location               = var.region
+  resource_group_name    = var.resource_group_name
+  storage_account_type   = "Premium_LRS"
+  create_option          = "Empty"
+  disk_size_gb           = var.infra_data_disk_size_GB
+  zone                   = length(var.availability_zones) > 1 ? var.availability_zones[count.index % length(var.availability_zones)] : var.availability_zones[0]
+  disk_encryption_set_id = var.disk_encryption_set_id
 }
 
 resource "azurerm_virtual_machine_data_disk_attachment" "data_disk" {
@@ -183,14 +184,14 @@ resource "azurerm_virtual_machine_data_disk_attachment" "data_disk" {
 resource "azurerm_managed_disk" "worker_disk" {
  count = var.worker_data_disk_size_GB>0 ? var.instance_count : 0
 
-  name                 = "${var.cluster_id}-worker-${count.index}-data-disk"
-  location             = var.region
-  resource_group_name  = var.resource_group_name
-  storage_account_type = "Premium_LRS"
-  create_option        = "Empty"
-  disk_size_gb         = var.worker_data_disk_size_GB
-  zone                = length(var.availability_zones) > 1 ? var.availability_zones[count.index % length(var.availability_zones)] : var.availability_zones[0]
-  
+  name                   = "${var.cluster_id}-worker-${count.index}-data-disk"
+  location               = var.region
+  resource_group_name    = var.resource_group_name
+  storage_account_type   = "Premium_LRS"
+  create_option          = "Empty"
+  disk_size_gb           = var.worker_data_disk_size_GB
+  zone                   = length(var.availability_zones) > 1 ? var.availability_zones[count.index % length(var.availability_zones)] : var.availability_zones[0]
+  disk_encryption_set_id = var.disk_encryption_set_id
 }
 
 resource "azurerm_virtual_machine_data_disk_attachment" "worker_disk_attachment" {

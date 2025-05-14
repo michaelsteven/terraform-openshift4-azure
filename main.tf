@@ -106,7 +106,7 @@ data "external" "get_network_configuration" {
 }
 
 locals {
-  cluster_id = "${var.resource_prefix}-${var.cluster_name}-${random_string.cluster_id.result}"
+  cluster_id = "${var.resource_prefix}-${var.cluster_name}"
   tags = merge(
     {
       "kubernetes.io_cluster.${local.cluster_id}" = "owned"
@@ -196,7 +196,6 @@ module "vnet" {
 }
 
 module "dns" {
-  count                           = !var.openshift_byo_dns && var.openshift_dns_provider == "azure" ? 1 : 0
   source                          = "./dns"
 
   cluster_domain                  = "${var.cluster_name}.${var.base_domain}"
@@ -216,36 +215,12 @@ module "dns" {
   emulate_single_stack_ipv6       = var.azure_emulate_single_stack_ipv6
 }
 
-data "external" "infoblox_env" {
-  program = ["bash", "${path.module}/scripts/infoblox_env.sh"]
-}
+module "keyvault" {
+  source = "./keyvault"
 
-provider "infoblox" {
-  username                        = var.infoblox_username != "" ? var.infoblox_username : data.external.infoblox_env.result["infoblox_username"]
-  password                        = var.infoblox_password != "" ? var.infoblox_password : data.external.infoblox_env.result["infoblox_password"]
-  server                          = var.infoblox_fqdn
-  wapi_version                    = var.infoblox_wapi_version
-  pool_connections                = var.infoblox_pool_connections
-}
-
-module "infoblox_dns" {
-  count                           = var.azure_private && var.openshift_dns_provider == "infoblox" ? 1 : 0
-  source                          = "./infoblox_dns"
-
-  infoblox_fqdn                   = var.infoblox_fqdn
-  infoblox_username               = var.infoblox_username != "" ? var.infoblox_username : data.external.infoblox_env.result["infoblox_username"]
-  infoblox_password               = var.infoblox_password != "" ? var.infoblox_password : data.external.infoblox_env.result["infoblox_password"]
-  infoblox_allow_any              = var.infoblox_allow_any
-  infoblox_apps_dns_entries       = var.infoblox_apps_dns_entries
-  cluster_name                    = var.cluster_name
-  base_domain                     = var.base_domain
-  internal_lb_ipaddress_v4        = module.vnet.internal_lb_ip_v4_address
-  internal_lb_ipaddress_v6        = module.vnet.internal_lb_ip_v6_address
-  internal_lb_apps_ipaddress_v4   = module.vnet.internal_lb_apps_ip_v4_address
-  internal_lb_apps_ipaddress_v6   = module.vnet.internal_lb_apps_ip_v6_address
-
-  use_ipv4                        = var.use_ipv4
-  use_ipv6                        = var.use_ipv6
+  resource_group_name     = var.azure_resource_group_name
+  region                  = var.azure_region
+  cluster_id              = local.cluster_id
 }
 
 module "ignition" {
@@ -303,6 +278,7 @@ module "ignition" {
   master_subnet_id              = module.vnet.master_subnet_id
   worker_subnet_id              = module.vnet.worker_subnet_id
   resource_prefix               = "${var.resource_prefix}-${var.cluster_name}"
+  disk_encryption_set_name      = module.keyvault.disk_encryption_set_name 
 }
 
 module "bootstrap" {
@@ -335,6 +311,7 @@ module "bootstrap" {
   phased_approach           = var.phased_approach 
   phase1_complete           = var.phase1_complete
   managed_infrastructure    = var.openshift_managed_infrastructure
+  disk_encryption_set_id    = module.keyvault.disk_encryption_set_id 
 }
 
 module "master" {
@@ -367,6 +344,7 @@ module "master" {
   phased_approach           = var.phased_approach 
   phase1_complete           = var.phase1_complete
   managed_infrastructure    = var.openshift_managed_infrastructure
+  disk_encryption_set_id    = module.keyvault.disk_encryption_set_id
 
   depends_on = [module.bootstrap]
 }
@@ -406,6 +384,7 @@ module "infra" {
   managed_infrastructure    = var.openshift_managed_infrastructure
   infra_data_disk_size_GB   = var.infra_data_disk_size_GB
   number_of_disks_per_node  = var.infra_number_of_disks_per_node
+  disk_encryption_set_id    = module.keyvault.disk_encryption_set_id
 
   depends_on = [module.master, module.worker]
 }
@@ -444,6 +423,7 @@ module "worker" {
   phase1_complete           = var.phase1_complete
   managed_infrastructure    = var.openshift_managed_infrastructure
   worker_data_disk_size_GB  = var.worker_data_disk_size_GB
+  disk_encryption_set_id    = module.keyvault.disk_encryption_set_id
 
   depends_on = [module.master, time_sleep.wait_x]
 }
