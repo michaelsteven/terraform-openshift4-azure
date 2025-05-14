@@ -115,6 +115,7 @@ resource "azurerm_linux_virtual_machine" "master" {
     caching              = "ReadOnly"
     storage_account_type = var.os_volume_type
     disk_size_gb         = var.os_volume_size
+    disk_encryption_set_id = var.disk_encryption_set_id
   }
 
   dynamic "source_image_reference" {

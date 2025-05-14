@@ -8,9 +8,14 @@ compute:
   platform:
     azure:
       type: ${var.worker_vm_type}
+      encryptionAtHost: true
       osDisk:
         diskSizeGB: ${var.worker_os_disk_size}
         diskType: Premium_LRS
+        diskEncryptionSet:
+          name: ${var.disk_encryption_set_name}
+          resourceGroup: ${var.resource_group_name}
+          subscriptionId: ${var.azure_subscription_id}
   replicas: ${var.node_count}
 controlPlane:
   hyperthreading: Enabled
@@ -18,9 +23,14 @@ controlPlane:
   platform:
     azure:
       type: ${var.master_vm_type}
+      encryptionAtHost: true
       osDisk:
         diskSizeGB: ${var.master_os_disk_size}
         diskType: Premium_LRS
+        diskEncryptionSet:
+          name: ${var.disk_encryption_set_name}
+          resourceGroup: ${var.resource_group_name}
+          subscriptionId: ${var.azure_subscription_id}
       zones:
       - "1"
       - "2"

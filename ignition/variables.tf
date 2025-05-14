@@ -237,3 +237,8 @@ variable "proxy_eval" {
   description = "Turn on/off proxy evaluation for testing"
   default     = false  
 }
+
+variable "disk_encryption_set_name" {
+  type        = string
+  description = "Disk encryption set to use for machine disks"
+}
