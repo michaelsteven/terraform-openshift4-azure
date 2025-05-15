@@ -51,8 +51,7 @@ data "azurerm_public_ip" "cluster_public_ip_v6" {
 }
 
 resource "azurerm_lb" "public" {
-  count = local.need_public_ipv4 ? 1 : 0
-
+  count = (local.need_public_ipv4 || local.need_public_ipv6) ? 1 : 0
   sku                 = "Standard"
   name                = var.cluster_id
   resource_group_name = var.resource_group_name
