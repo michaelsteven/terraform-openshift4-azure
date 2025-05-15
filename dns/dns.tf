@@ -106,6 +106,13 @@ resource "azurerm_private_dns_zone" "storage_private_link" {
   resource_group_name = var.resource_group_name
 }
 
+resource "azurerm_private_dns_zone_virtual_network_link" "network_link_storage" {
+  name                  = "${var.cluster_id}-storage-network-link"
+  resource_group_name   = var.resource_group_name
+  private_dns_zone_name = azurerm_private_dns_zone.storage_private_link.name
+  virtual_network_id    = var.virtual_network_id
+}
+
 resource "azurerm_private_dns_a_record" "ignition_private_link" {
   name                = var.ignition_storage_account_name
   zone_name           = azurerm_private_dns_zone.storage_private_link.name
