@@ -374,36 +374,6 @@ variable "azure_ignition_storage_account_name" {
   default     = ""
 }
 
-variable "azure_ignition_sas_container_name" {
-  description = "Azure Container name storing the ignition files"
-  type        = string
-  default     = ""
-}
-
-variable "azure_ignition_sas_token" {
-  description = "The SAS storage token string for the ignition files"
-  type        = string
-  default     = ""
-}
-
-variable "azure_bootlogs_storage_rg" {
-  description = "Existing Storage Account Resource Group for the boot diagnostic files"
-  type        = string
-  default     = ""
-}
-
-variable "azure_bootlogs_storage_account_name" {
-  description = "Existing Storage Account Name for the boot diagnostic files"
-  type        = string
-  default     = ""
-}
-
-variable "azure_bootlogs_sas_token" {
-  description = "The SAS storage token string for the boot diagnostic files"
-  type        = string
-  default     = ""
-}
-
 variable "phased_approach" {
   description = "Define whether you want to install using a phased approach"
   type        = bool

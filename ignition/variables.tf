@@ -192,7 +192,12 @@ variable "storage_account_name" {
   default = ""
 }
 
-variable "storage_resource_group" {
+variable "storage_account_sas" {
+  type    = string
+  default = ""
+}
+
+variable "storage_container_name" {
   type    = string
   default = ""
 }
@@ -212,18 +217,6 @@ variable "use_default_imageregistry" {
   description = "Define if default imageregistry is required"
   type        = bool
   default     = true
-}
-
-variable "ignition_sas_token" {
-  description = "The SAS storage token string for the ignition files"
-  type        = string
-  default     = ""
-}
-
-variable "ignition_sas_container_name" {
-  description = "Name of the container used for SAS storage for the ignition files"
-  type        = string
-  default     = ""
 }
 
 variable "openshift_pull_secret_string" {

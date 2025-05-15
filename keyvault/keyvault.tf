@@ -1,7 +1,7 @@
 data "azurerm_client_config" "current" {}
 
 resource "azurerm_key_vault" "key_vault" {
-  name                       = "${var.cluster_id}-kv"
+  name                       = "${substr(var.resource_prefix, 0, 10)}-${var.random_string}-kv"
   location                   = var.region
   resource_group_name        = var.resource_group_name
   tenant_id                  = data.azurerm_client_config.current.tenant_id
