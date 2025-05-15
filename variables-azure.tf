@@ -592,5 +592,5 @@ variable "worker_data_disk_size_GB" {
 variable "resource_prefix" {
   type        = string
   description = "the prefix to prepend to created resources"
-  default     = "openshift-example"
+  default     = "wx"
 }
