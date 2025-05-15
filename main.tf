@@ -292,7 +292,6 @@ module "ignition" {
   disk_encryption_set_name      = module.keyvault.disk_encryption_set_name 
   storage_account_name          = module.storageaccount.ignition_storage_account_name
   storage_account_sas           = module.storageaccount.ignition_storage_account_sas
-  storage_container_name        = module.storageaccount.ignition_storage_container_name
 }
 
 module "bootstrap" {
