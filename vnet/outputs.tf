@@ -23,7 +23,7 @@ output "internal_lb_backend_pool_v6_id" {
 }
 
 output "public_lb_id" {
-  value = var.private ? null : azurerm_lb.public.id
+  value = var.private ? null : azurerm_lb.public[0].id
 }
 
 output "public_lb_pip_v4_fqdn" {
