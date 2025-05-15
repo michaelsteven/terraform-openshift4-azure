@@ -6,7 +6,7 @@ resource "azurerm_storage_account" "ignition" {
   location                 = var.azure_region
   account_tier             = "Standard"
   account_replication_type = "LRS"
-  public_network_access_enabled = true
+  public_network_access_enabled = false
 }
 
 data "azurerm_storage_account" "ignition" {
