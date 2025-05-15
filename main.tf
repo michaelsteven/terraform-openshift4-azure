@@ -168,7 +168,8 @@ module "shared_image" {
   shared_image_name                 = var.azure_shared_image_name
   installer_workspace               = null_resource.installer_workspace.triggers.installer_workspace
   bash_debug                        = var.bash_debug
-  proxy_eval                        = var.no_proxy_test   
+  proxy_eval                        = var.no_proxy_test
+  rhcos_image                       = var.rhcos_image
 }
 
 module "vnet" {

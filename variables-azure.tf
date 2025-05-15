@@ -223,6 +223,12 @@ variable "openshift_pull_secret" {
   default = "pull-secret"
 }
 
+variable "rhcos_image" {
+  type        = string
+  description = "(Optional) The url to the Red Hat CoreOS image VHD file.  If blank it will attempt to construct it based on the OpenShift version. EXAMPLE: https://rhcos.blob.core.windows.net/imagebucket/rhcos-417.94.202501301529-0-azure.x86_64.vhd"
+  default     = ""
+}
+
 variable "azure_infra_root_volume_size" {
   type    = string
   default = 128
