@@ -83,3 +83,13 @@ variable "emulate_single_stack_ipv6" {
   type        = bool
   description = "This determines whether a dual-stack cluster is configured to emulate single-stack IPv6."
 }
+
+variable "ignition_storage_account_name" {
+  type        = string
+  description = "Name of the storage account for private endpoint DNS record creation."
+}
+
+variable "ignition_storage_private_endpoint_ip_address" {
+  type        = string
+  description = "Private endpoint IP address for the ignition storage account."
+}

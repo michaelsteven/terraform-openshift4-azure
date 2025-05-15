@@ -3,6 +3,12 @@ variable "openshift_version" {
   default = "latest"
 }
 
+variable "rhcos_image" {
+  type        = string
+  description = "(Optional) The url to the Red Hat CoreOS image VHD file.  If blank it will attempt to construct it based on the OpenShift version."
+  default     = ""
+}
+
 variable "subscription_id" {
   type        = string
   description = "The subscription that should be used to interact with Azure API"

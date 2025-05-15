@@ -100,3 +100,23 @@ resource "azurerm_private_dns_aaaa_record" "apps_internal_v6" {
   ttl                 = 300
   records             = [var.internal_lb_apps_ipaddress_v6]
 }
+
+resource "azurerm_private_dns_zone" "storage_private_link" {
+  name                = "privatelink.blob.core.windows.net"
+  resource_group_name = var.resource_group_name
+}
+
+resource "azurerm_private_dns_zone_virtual_network_link" "network_link_storage" {
+  name                  = "${var.cluster_id}-storage-network-link"
+  resource_group_name   = var.resource_group_name
+  private_dns_zone_name = azurerm_private_dns_zone.storage_private_link.name
+  virtual_network_id    = var.virtual_network_id
+}
+
+resource "azurerm_private_dns_a_record" "ignition_private_link" {
+  name                = var.ignition_storage_account_name
+  zone_name           = azurerm_private_dns_zone.storage_private_link.name
+  resource_group_name = var.resource_group_name
+  ttl                 = 10
+  records             = [var.ignition_storage_private_endpoint_ip_address]
+}
