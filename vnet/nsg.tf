@@ -28,6 +28,7 @@ resource "azurerm_subnet_network_security_group_association" "worker" {
 }
 
 resource "azurerm_network_security_rule" "apiserver_in" {
+  count                       = var.preexisting_network ? 0 : 1
   name                        = "apiserver_in"
   priority                    = 101
   direction                   = "Inbound"
@@ -43,6 +44,7 @@ resource "azurerm_network_security_rule" "apiserver_in" {
 }
 
 resource "azurerm_network_security_rule" "ssh_in" {
+  count                       = var.preexisting_network ? 0 : 1
   name                        = "ssh_in"
   priority                    = 110
   direction                   = "Inbound"
@@ -58,6 +60,7 @@ resource "azurerm_network_security_rule" "ssh_in" {
 }
 
 resource "azurerm_network_security_rule" "tcp-http" {
+  count                       = var.preexisting_network ? 0 : 1
   name                        = "tcp-80"
   priority                    = 201
   direction                   = "Inbound"
@@ -73,6 +76,7 @@ resource "azurerm_network_security_rule" "tcp-http" {
 }
 
 resource "azurerm_network_security_rule" "tcp-https" {
+  count                       = var.preexisting_network ? 0 : 1
   name                        = "tcp-443"
   priority                    = 202
   direction                   = "Inbound"
