@@ -122,9 +122,6 @@ locals {
   major_version                       = join(".", slice(split(".", var.openshift_version), 0, 2))
   installer_workspace                 = "${path.cwd}/installer-files/"
   azure_image_id                      = var.azure_image_id != "" ? var.azure_image_id : (var.azure_shared_image ? module.shared_image[0].shared_image_id : module.image[0].image_cluster_id)
-  azure_bootlogs_storage_account_name = var.use_bootlogs_storage_account ? ( var.azure_bootlogs_sas_token != "" ? var.azure_bootlogs_storage_account_name : data.azurerm_storage_account.bootlogs[0].name ) : ""
-  azure_bootlogs_base_uri             = "https://${local.azure_bootlogs_storage_account_name}.blob.core.windows.net/"
-  azure_bootlogs_storage_account_uri  = var.use_bootlogs_storage_account ? ( var.azure_bootlogs_sas_token != "" ? "${local.azure_bootlogs_base_uri}?${var.azure_bootlogs_sas_token}" : data.azurerm_storage_account.bootlogs[0].primary_blob_endpoint ) : ""
   azure_subscription_id               = var.azure_subscription_id != "" ? var.azure_subscription_id : data.azurerm_client_config.current.subscription_id
   azure_tenant_id                     = var.azure_tenant_id != "" ? var.azure_tenant_id : data.azurerm_client_config.current.tenant_id
   azure_client_id                     = var.azure_client_id != "" ? var.azure_client_id : data.azurerm_client_config.current.client_id
@@ -196,6 +193,17 @@ module "vnet" {
   dns_apps_ip               = var.apps_dns_ip
 }
 
+module "storageaccount" {
+  source                          = "./storageaccount"
+
+  azure_region                = var.azure_region
+  cluster_id                  = local.cluster_id
+  cluster_name                = var.cluster_name
+  private_endpoint_subnet_id  = module.vnet.master_subnet_id
+  resource_group_name         = var.azure_resource_group_name
+  resource_prefix             = var.resource_prefix
+}
+
 module "dns" {
   source                          = "./dns"
 
@@ -216,6 +224,8 @@ module "dns" {
   use_ipv4                        = var.use_ipv4 || var.azure_emulate_single_stack_ipv6
   use_ipv6                        = var.use_ipv6
   emulate_single_stack_ipv6       = var.azure_emulate_single_stack_ipv6
+  ignition_storage_account_name   = module.storageaccount.ignition_storage_account_name
+  ignition_storage_private_endpoint_ip_address = module.storageaccount.ignition_storage_private_endpoint_ip_address
 }
 
 module "keyvault" {
@@ -224,11 +234,13 @@ module "keyvault" {
   resource_group_name     = var.azure_resource_group_name
   region                  = var.azure_region
   cluster_id              = local.cluster_id
+  random_string           = random_string.cluster_id.result
+  resource_prefix         = var.resource_prefix
 }
 
 module "ignition" {
   source                        = "./ignition"
-  depends_on                    = [module.image, module.shared_image, local_file.azure_sp_json, null_resource.installer_workspace]
+  depends_on                    = [module.image, module.shared_image, local_file.azure_sp_json, null_resource.installer_workspace, module.dns]
   base_domain                   = var.base_domain
   openshift_version             = var.openshift_version
   master_count                  = var.master_count
@@ -244,8 +256,6 @@ module "ignition" {
   public_ssh_key                = chomp(local.public_ssh_key)
   cluster_id                    = local.cluster_id
   resource_group_name           = data.azurerm_resource_group.main.name
-  storage_resource_group        = data.azurerm_resource_group.ignition_storage.name
-  storage_account_name          = var.azure_ignition_storage_account_name
   availability_zones            = var.azure_master_availability_zones
   node_count                    = var.worker_count
   infra_count                   = var.infra_count
@@ -275,13 +285,14 @@ module "ignition" {
   openshift_dns_provider        = var.openshift_dns_provider
   managed_infrastructure        = var.openshift_managed_infrastructure
   use_default_imageregistry     = var.use_default_imageregistry
-  ignition_sas_token            = var.azure_ignition_sas_token
-  ignition_sas_container_name   = var.azure_ignition_sas_container_name
   proxy_eval                    = var.no_proxy_test
   master_subnet_id              = module.vnet.master_subnet_id
   worker_subnet_id              = module.vnet.worker_subnet_id
   resource_prefix               = "${var.resource_prefix}-${var.cluster_name}"
   disk_encryption_set_name      = module.keyvault.disk_encryption_set_name 
+  storage_account_name          = module.storageaccount.ignition_storage_account_name
+  storage_account_sas           = module.storageaccount.ignition_storage_account_sas
+  storage_container_name        = module.storageaccount.ignition_storage_container_name
 }
 
 module "bootstrap" {
@@ -302,7 +313,6 @@ module "bootstrap" {
   ilb_backend_pool_v4_id    = module.vnet.internal_lb_backend_pool_v4_id
   ilb_backend_pool_v6_id    = module.vnet.internal_lb_backend_pool_v6_id
   tags                      = local.tags
-  bootlogs_uri              = local.azure_bootlogs_storage_account_uri
   nsg_name                  = module.vnet.cluster_nsg_name
   private                   = module.vnet.private
   outbound_udr              = var.azure_outbound_user_defined_routing
@@ -334,7 +344,6 @@ module "master" {
   ilb_backend_pool_v6_id = module.vnet.internal_lb_backend_pool_v6_id
   subnet_id              = module.vnet.master_subnet_id
   instance_count         = var.master_count
-  bootlogs_uri           = local.azure_bootlogs_storage_account_uri
   os_volume_type         = var.azure_master_root_volume_type
   os_volume_size         = var.azure_master_root_volume_size
   private                = module.vnet.private
@@ -372,7 +381,6 @@ module "infra" {
   ilb_backend_pool_v6_id = module.vnet.internal_lb_apps_backend_pool_v6_id
   subnet_id              = module.vnet.worker_subnet_id
   instance_count         = var.infra_count
-  bootlogs_uri           = local.azure_bootlogs_storage_account_uri
   os_volume_type         = var.azure_worker_root_volume_type
   os_volume_size         = var.azure_infra_root_volume_size
   private                = module.vnet.private
@@ -412,7 +420,6 @@ module "worker" {
   ilb_backend_pool_v6_id = module.vnet.internal_lb_apps_backend_pool_v6_id
   subnet_id              = module.vnet.worker_subnet_id
   instance_count         = var.worker_count
-  bootlogs_uri           = local.azure_bootlogs_storage_account_uri
   os_volume_type         = var.azure_worker_root_volume_type
   os_volume_size         = var.azure_worker_root_volume_size
   private                = module.vnet.private
@@ -455,27 +462,6 @@ data "azurerm_resource_group" "image_storage" {
 
 data "azurerm_resource_group" "ignition_storage" {
   name = var.azure_ignition_storage_rg != "" ? var.azure_ignition_storage_rg : data.azurerm_resource_group.main.name
-}
-
-data "azurerm_resource_group" "bootlogs_storage" {
-  name = var.azure_bootlogs_storage_rg != "" ? var.azure_bootlogs_storage_rg : data.azurerm_resource_group.main.name
-}
-
-resource "azurerm_storage_account" "bootlogs" {
-  count = var.use_bootlogs_storage_account && var.azure_bootlogs_storage_account_name == "" ? 1 : 0
-
-  name                     = "bootlogs${var.cluster_name}${random_string.cluster_id.result}"
-  resource_group_name      = data.azurerm_resource_group.bootlogs_storage.name
-  location                 = var.azure_region
-  account_tier             = "Standard"
-  account_replication_type = "LRS"
-}
-
-data "azurerm_storage_account" "bootlogs" {
-  count = var.use_bootlogs_storage_account && var.azure_bootlogs_sas_token == "" ? 1 : 0
-
-  name                     = var.azure_bootlogs_storage_account_name != "" ? var.azure_bootlogs_storage_account_name : azurerm_storage_account.bootlogs[0].name
-  resource_group_name      = data.azurerm_resource_group.bootlogs_storage.name
 }
 
 resource "azurerm_user_assigned_identity" "main" {

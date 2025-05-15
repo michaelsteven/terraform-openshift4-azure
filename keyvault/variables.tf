@@ -9,5 +9,13 @@ variable "resource_group_name" {
 }
 
 variable "cluster_id" {
+  type        = string
+}
+
+variable "resource_prefix" {
+  type = string
+}
+
+variable "random_string" {
   type = string
 }
