@@ -27,7 +27,7 @@ resource "azurerm_private_endpoint" "storage-endpoint-master" {
     name                           = "${var.resource_prefix}-ignition-storate-private-endpointce-connection"
     private_connection_resource_id = data.azurerm_storage_account.ignition[0].id
     is_manual_connection           = false
-    subresource_names              = ["file"]
+    subresource_names              = ["blob"]
   }
 }
 
@@ -41,7 +41,7 @@ resource "azurerm_private_endpoint" "storage-endpoint-worker" {
     name                           = "${var.resource_prefix}-ignition-storate-private-endpointce-connection"
     private_connection_resource_id = data.azurerm_storage_account.ignition[0].id
     is_manual_connection           = false
-    subresource_names              = ["file"]
+    subresource_names              = ["blob"]
   }
 }
 
