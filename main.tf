@@ -240,7 +240,7 @@ module "keyvault" {
 
 module "ignition" {
   source                        = "./ignition"
-  depends_on                    = [module.image, module.shared_image, local_file.azure_sp_json, null_resource.installer_workspace, module.dns]
+  depends_on                    = [module.image, module.shared_image, local_file.azure_sp_json, null_resource.installer_workspace, time_sleep.wait_for_dns ]
   base_domain                   = var.base_domain
   openshift_version             = var.openshift_version
   master_count                  = var.master_count
@@ -496,4 +496,9 @@ resource "azurerm_role_assignment" "network" {
 resource "time_sleep" "wait_x" {
   depends_on = [module.master]
   create_duration = "10m"
+}
+
+resource "time_sleep" "wait_for_dns" {
+  depends_on = [module.dns]
+  create_duration = "1m"
 }
