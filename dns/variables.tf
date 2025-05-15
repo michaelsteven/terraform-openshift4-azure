@@ -35,12 +35,22 @@ variable "external_lb_fqdn_v6" {
 }
 
 variable "internal_lb_ipaddress_v4" {
-  description = "External API's LB IP v4 address"
+  description = "Internal API's LB IP v4 address"
   type        = string
 }
 
 variable "internal_lb_ipaddress_v6" {
-  description = "External API's LB IP v6 address"
+  description = "Internal API's LB IP v6 address"
+  type        = string
+}
+
+variable "internal_lb_apps_ipaddress_v4" {
+  description = "Internal Apps LB IP v4 address"
+  type        = string
+}
+
+variable "internal_lb_apps_ipaddress_v6" {
+  description = "Internal Apps LB IP v6 address"
   type        = string
 }
 
