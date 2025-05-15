@@ -140,10 +140,11 @@ resource "azurerm_linux_virtual_machine" "bootstrap" {
   }
 
   os_disk {
-    name                 = "${var.cluster_id}-bootstrap_OSDisk" # os disk name needs to match cluster-api convention
-    caching              = "ReadWrite"
-    storage_account_type = "Premium_LRS"
-    disk_size_gb         = 100
+    name                   = "${var.cluster_id}-bootstrap_OSDisk" # os disk name needs to match cluster-api convention
+    caching                = "ReadWrite"
+    storage_account_type   = "Premium_LRS"
+    disk_size_gb           = 100
+    disk_encryption_set_id = var.disk_encryption_set_id
   }
 
   dynamic "source_image_reference" {
@@ -183,18 +184,4 @@ resource "azurerm_linux_virtual_machine" "bootstrap" {
     azurerm_network_interface_backend_address_pool_association.internal_lb_bootstrap_v4,
     azurerm_network_interface_backend_address_pool_association.internal_lb_bootstrap_v6
   ]
-}
-
-resource "azurerm_network_security_rule" "bootstrap_ssh_in" {
-  name                        = "bootstrap_ssh_in"
-  priority                    = 103
-  direction                   = "Inbound"
-  access                      = "Allow"
-  protocol                    = "Tcp"
-  source_port_range           = "*"
-  destination_port_range      = "22"
-  source_address_prefix       = "*"
-  destination_address_prefix  = "*"
-  resource_group_name         = var.resource_group_name
-  network_security_group_name = var.nsg_name
 }

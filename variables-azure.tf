@@ -223,6 +223,12 @@ variable "openshift_pull_secret" {
   default = "pull-secret"
 }
 
+variable "rhcos_image" {
+  type        = string
+  description = "(Optional) The url to the Red Hat CoreOS image VHD file.  If blank it will attempt to construct it based on the OpenShift version. EXAMPLE: https://rhcos.blob.core.windows.net/imagebucket/rhcos-417.94.202501301529-0-azure.x86_64.vhd"
+  default     = ""
+}
+
 variable "azure_infra_root_volume_size" {
   type    = string
   default = 128
@@ -370,36 +376,6 @@ variable "azure_ignition_storage_rg" {
 
 variable "azure_ignition_storage_account_name" {
   description = "Existing Storage Account Name for the ignition files"
-  type        = string
-  default     = ""
-}
-
-variable "azure_ignition_sas_container_name" {
-  description = "Azure Container name storing the ignition files"
-  type        = string
-  default     = ""
-}
-
-variable "azure_ignition_sas_token" {
-  description = "The SAS storage token string for the ignition files"
-  type        = string
-  default     = ""
-}
-
-variable "azure_bootlogs_storage_rg" {
-  description = "Existing Storage Account Resource Group for the boot diagnostic files"
-  type        = string
-  default     = ""
-}
-
-variable "azure_bootlogs_storage_account_name" {
-  description = "Existing Storage Account Name for the boot diagnostic files"
-  type        = string
-  default     = ""
-}
-
-variable "azure_bootlogs_sas_token" {
-  description = "The SAS storage token string for the boot diagnostic files"
   type        = string
   default     = ""
 }
@@ -586,4 +562,11 @@ variable "worker_data_disk_size_GB" {
   type          = string
   description   = "Size of storage disk for worker nodes" 
   default       = 0
+}
+
+
+variable "resource_prefix" {
+  type        = string
+  description = "the prefix to prepend to created resources"
+  default     = "wx"
 }

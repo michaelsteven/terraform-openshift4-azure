@@ -192,7 +192,7 @@ variable "storage_account_name" {
   default = ""
 }
 
-variable "storage_resource_group" {
+variable "storage_account_sas" {
   type    = string
   default = ""
 }
@@ -214,18 +214,6 @@ variable "use_default_imageregistry" {
   default     = true
 }
 
-variable "ignition_sas_token" {
-  description = "The SAS storage token string for the ignition files"
-  type        = string
-  default     = ""
-}
-
-variable "ignition_sas_container_name" {
-  description = "Name of the container used for SAS storage for the ignition files"
-  type        = string
-  default     = ""
-}
-
 variable "openshift_pull_secret_string" {
   type        = string
   description = "pull-secret as a string"
@@ -236,4 +224,26 @@ variable "proxy_eval" {
   type        = bool
   description = "Turn on/off proxy evaluation for testing"
   default     = false  
+}
+
+variable "master_subnet_id" {
+  type        = string
+  description = "ID of the master subnet"
+}
+
+
+variable "worker_subnet_id" {
+  type        = string
+  description = "ID of the worker subnet"
+}
+
+
+variable "resource_prefix" {
+  type        = string
+  description = "the prefix to prepend to created resources"
+}
+
+variable "disk_encryption_set_name" {
+  type        = string
+  description = "Disk encryption set to use for machine disks"
 }

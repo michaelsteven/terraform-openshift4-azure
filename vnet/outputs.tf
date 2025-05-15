@@ -23,7 +23,7 @@ output "internal_lb_backend_pool_v6_id" {
 }
 
 output "public_lb_id" {
-  value = var.private ? null : azurerm_lb.public.id
+  value = var.private ? null : azurerm_lb.public[0].id
 }
 
 output "public_lb_pip_v4_fqdn" {
@@ -63,7 +63,7 @@ output "internal_lb_apps_ip_v6_address" {
 }
 
 output "cluster_nsg_name" {
-  value = azurerm_network_security_group.cluster.name
+  value = local.nsg_name
 }
 
 output "virtual_network_id" {

@@ -35,12 +35,22 @@ variable "external_lb_fqdn_v6" {
 }
 
 variable "internal_lb_ipaddress_v4" {
-  description = "External API's LB IP v4 address"
+  description = "Internal API's LB IP v4 address"
   type        = string
 }
 
 variable "internal_lb_ipaddress_v6" {
-  description = "External API's LB IP v6 address"
+  description = "Internal API's LB IP v6 address"
+  type        = string
+}
+
+variable "internal_lb_apps_ipaddress_v4" {
+  description = "Internal Apps LB IP v4 address"
+  type        = string
+}
+
+variable "internal_lb_apps_ipaddress_v6" {
+  description = "Internal Apps LB IP v6 address"
   type        = string
 }
 
@@ -72,4 +82,14 @@ variable "use_ipv6" {
 variable "emulate_single_stack_ipv6" {
   type        = bool
   description = "This determines whether a dual-stack cluster is configured to emulate single-stack IPv6."
+}
+
+variable "ignition_storage_account_name" {
+  type        = string
+  description = "Name of the storage account for private endpoint DNS record creation."
+}
+
+variable "ignition_storage_private_endpoint_ip_address" {
+  type        = string
+  description = "Private endpoint IP address for the ignition storage account."
 }
