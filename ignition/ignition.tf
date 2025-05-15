@@ -4,6 +4,14 @@ locals {
   cluster_nr              = join("", split("-", var.cluster_id))
 }
 
+
+resource "azurerm_storage_container" "ignition" {
+  name                  = "ignition-${var.cluster_id}"
+  storage_account_name  = var.storage_account_name
+  container_access_type = "private"
+}
+
+
 resource "null_resource" "download_binaries" {
 
   triggers = {
@@ -81,7 +89,7 @@ resource "azurerm_storage_blob" "ignition-bootstrap" {
   name                   = "bootstrap.ign"
   source                 = "${local.installer_workspace}/bootstrap.ign"
   storage_account_name   = var.storage_account_name
-  storage_container_name = var.storage_container_name
+  storage_container_name = azurerm_storage_container.ignition.name
   type                   = "Block"
   depends_on = [
     null_resource.generate_ignition
@@ -92,7 +100,7 @@ resource "azurerm_storage_blob" "ignition-master" {
   name                   = "master.ign"
   source                 = "${local.installer_workspace}/master.ign"
   storage_account_name   = var.storage_account_name
-  storage_container_name = var.storage_container_name
+  storage_container_name = azurerm_storage_container.ignition.name
   type                   = "Block"
   depends_on = [
     null_resource.generate_ignition
@@ -103,7 +111,7 @@ resource "azurerm_storage_blob" "ignition-worker" {
   name                   = "worker.ign"
   source                 = "${local.installer_workspace}/worker.ign"
   storage_account_name   = var.storage_account_name
-  storage_container_name = var.storage_container_name
+  storage_container_name = azurerm_storage_container.ignition.name
   type                   = "Block"
   depends_on = [
     null_resource.generate_ignition
@@ -114,7 +122,7 @@ resource "azurerm_storage_blob" "auth-kubeconfig" {
   name                   = "kubeconfig"
   source                 = "${local.installer_workspace}/auth/kubeconfig"
   storage_account_name   = var.storage_account_name
-  storage_container_name = var.storage_container_name
+  storage_container_name = azurerm_storage_container.ignition.name
   type                   = "Block"
   depends_on = [
     null_resource.generate_ignition

@@ -47,12 +47,6 @@ data "azurerm_storage_account_sas" "ignition" {
   }
 }
 
-resource "azurerm_storage_container" "ignition" {
-  name                  = "ignition-${var.cluster_id}"
-  storage_account_name  = data.azurerm_storage_account.ignition.name
-  container_access_type = "private"
-}
-
 resource "azurerm_private_endpoint" "storage_private_endpoint" {
     name                = "${var.resource_prefix}-pe"
     location            = var.azure_region

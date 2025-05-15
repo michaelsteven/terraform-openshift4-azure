@@ -197,11 +197,6 @@ variable "storage_account_sas" {
   default = ""
 }
 
-variable "storage_container_name" {
-  type    = string
-  default = ""
-}
-
 variable "apps_ip" {
   type    = string
   default = ""
